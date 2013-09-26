@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface PollService {
 	
-	List<Poll> getAllPollsSkeletons() throws RepositoryError;
+	List<String> getAllPollsSkeletons() throws RepositoryError;
 	
 	List<Poll> getAllSubmittedPolls();
 

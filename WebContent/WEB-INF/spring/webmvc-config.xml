@@ -22,7 +22,7 @@
 	</bean>
 
 	<!-- Forwards requests to the "/" resource to the "home" view -->
-	<mvc:view-controller path="/" view-name="common.index"/>
+<!-- 	<mvc:view-controller path="/" view-name="common.index"/> -->
 
 	<mvc:view-controller path="/index.do" view-name="common.index"/>
 <!-- 	<mvc:view-controller path="/common/welcome.do" view-name="common.welcome"/> -->

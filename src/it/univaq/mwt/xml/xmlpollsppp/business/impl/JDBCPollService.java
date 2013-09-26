@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.exist.xmldb.EXistResource;
 import org.springframework.stereotype.Service;
 import org.xmldb.api.DatabaseManager;
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Database;
+import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.ResourceIterator;
 import org.xmldb.api.base.ResourceSet;
 import org.xmldb.api.base.XMLDBException;
@@ -28,6 +30,8 @@ public class JDBCPollService implements PollService {
 	
 	private final static String poll_ns = "http://it.univaq.mwt.xml/poll";
 	static Map<String, String> namespaces;
+//	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
+	public static final String exist_uri = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/polls";
 	
 	static {
 		try {
@@ -50,25 +54,80 @@ public class JDBCPollService implements PollService {
 		}
 	}
 	
-//	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
-	public static final String exist_uri = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/polls";
-	
     //esegue una query XPath sul database
-    private ResourceSet queryDatabase(String xpath, Collection coll) throws RepositoryError {
+    private ResourceSet queryPollsSkeletonsDB(String xpath) throws RepositoryError {
+    	Collection coll = null;
+    	
         try {
-            XPathQueryService xpqs = (XPathQueryService) coll.getService("XPathQueryService", "1.0");
+        	coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
+            XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
+            
             //carichiamo i binding dei namespace nel servizio di query
             for (Entry<String, String> entry : namespaces.entrySet()) {
                 xpqs.setNamespace(entry.getKey(), entry.getValue());
             }
+            
             //eseguiamo la query e restituiamo i risultati
-            return xpqs.query(xpath);
+            ResourceSet result = xpqs.query(xpath);
+            
+            return result;
+            
         } catch (XMLDBException ex) {
             throw new RepositoryError("ERRORE di accesso alla base di dati: " + ex.getMessage());
         }
     }	
-	
+    
 	@Override
+	public List<String> getAllPollsSkeletons() throws RepositoryError {
+
+		List<String> titlesList = new ArrayList<String>();
+		try {
+	/*		
+            col = DatabaseManager.getCollection(exist_uri, "admin", "admin");
+            
+            //services are requested for special tasks such as querying a collection with XPath, or managing a collection.
+            XPathQueryService xpqs = (XPathQueryService)col.getService("XPathQueryService", "1.0");  
+            
+            //carichiamo i binding dei namespace nel servizio di query
+            for (Entry<String, String> entry : namespaces.entrySet()) {
+                xpqs.setNamespace(entry.getKey(), entry.getValue());
+            }
+            
+            xpqs.setProperty("indent", "yes");
+            ResourceSet result = xpqs.query*/
+			
+			ResourceSet result = queryPollsSkeletonsDB("/p:poll/p:pollHead/p:title/text()");
+            ResourceIterator i = result.getIterator();
+            Resource res = null;
+            
+            while(i.hasMoreResources()) {
+                try {
+                    res = i.nextResource();
+                    titlesList.add(res.getContent().toString());
+                } finally {
+                    //dont forget to cleanup resources
+                    try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
+                }
+            }
+            
+        } catch (XMLDBException e) {
+			e.printStackTrace();
+		} finally {
+            //dont forget to cleanup
+            if(col != null) {
+                try { 
+                	col.close(); 
+                } catch(XMLDBException xe) {
+                	xe.printStackTrace();
+                	}
+                }
+        	}
+		
+        return titlesList;
+	}
+	    
+	
+/*	@Override
 	public List<Poll> getAllPollsSkeletons() throws RepositoryError {
 
 		Collection col = null;
@@ -90,7 +149,7 @@ public class JDBCPollService implements PollService {
             throw new RepositoryError("ERRORE di creazione della base di dati: " + ex.getMessage());
         }
 		
-/*		List<String> pidlist = new ArrayList<String>();
+		List<String> pidlist = new ArrayList<String>();
 		
 		try {
             //costruiamo una query estraendo i metadati (cioè le risorse che abbiamo
@@ -108,11 +167,11 @@ public class JDBCPollService implements PollService {
             }
         } catch (XMLDBException ex) {
             throw new RepositoryError("ERRORE di accesso alla base di dati: " + ex.getMessage());
-        }*/
+        }
         
         return null;
 	}
-	
+	*/
 	@Override
 	public List<Poll> getAllSubmittedPolls() {
 		// TODO Auto-generated method stub
