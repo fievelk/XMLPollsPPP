@@ -1,0 +1,16 @@
+<Context path="/xmlpollsppp">
+
+<!--     <Resource name="jdbc/xmlpollspppdb" scope="Unshareable" type="javax.sql.DataSource" -->
+<!--               maxActive="100" maxIdle="30" maxWait="5000" -->
+<!--               username="mwt" password="mwt" driverClassName="oracle.jdbc.OracleDriver" -->
+<!--               url="jdbc:oracle:thin:@127.0.0.1:1521:XE"/> -->
+
+    <Resource name="jdbc/xmlpollspppdb" scope="Unshareable" 
+    			type="javax.sql.DataSource"
+              	maxActive="100" maxIdle="30" maxWait="5000"
+              	username="admin" 
+              	password="admin" 
+              	driverClassName="org.exist.xmldb.DatabaseImpl"
+              	url="xmldb:exist://localhost:8085/exist/xmlrpc"/>
+         
+</Context>
