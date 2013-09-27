@@ -60,6 +60,7 @@ public class JDBCPollService implements PollService {
     	
         try {
         	coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
+        	System.out.println("NOME COLLECTION "+coll.getName());
             XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
             
             //carichiamo i binding dei namespace nel servizio di query
@@ -77,26 +78,15 @@ public class JDBCPollService implements PollService {
         }
     }	
     
+    
 	@Override
 	public List<String> getAllPollsSkeletons() throws RepositoryError {
 
 		List<String> titlesList = new ArrayList<String>();
 		try {
-	/*		
-            col = DatabaseManager.getCollection(exist_uri, "admin", "admin");
-            
-            //services are requested for special tasks such as querying a collection with XPath, or managing a collection.
-            XPathQueryService xpqs = (XPathQueryService)col.getService("XPathQueryService", "1.0");  
-            
-            //carichiamo i binding dei namespace nel servizio di query
-            for (Entry<String, String> entry : namespaces.entrySet()) {
-                xpqs.setNamespace(entry.getKey(), entry.getValue());
-            }
-            
-            xpqs.setProperty("indent", "yes");
-            ResourceSet result = xpqs.query*/
 			
 			ResourceSet result = queryPollsSkeletonsDB("/p:poll/p:pollHead/p:title/text()");
+//			ResourceSet result = queryPollsSkeletonsDB("/p:poll");
             ResourceIterator i = result.getIterator();
             Resource res = null;
             
@@ -104,6 +94,7 @@ public class JDBCPollService implements PollService {
                 try {
                     res = i.nextResource();
                     titlesList.add(res.getContent().toString());
+                    System.out.println(res.getContent().toString());
                 } finally {
                     //dont forget to cleanup resources
                     try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
@@ -112,16 +103,7 @@ public class JDBCPollService implements PollService {
             
         } catch (XMLDBException e) {
 			e.printStackTrace();
-		} finally {
-            //dont forget to cleanup
-            if(col != null) {
-                try { 
-                	col.close(); 
-                } catch(XMLDBException xe) {
-                	xe.printStackTrace();
-                	}
-                }
-        	}
+        }
 		
         return titlesList;
 	}
@@ -178,4 +160,74 @@ public class JDBCPollService implements PollService {
 		return null;
 	}
 
+
+ /* ZONA ORDINATA */
+	
+    @Override
+	public List<String> getPollSkeletonBy(String criteria) throws RepositoryError {
+    	
+    	List<String> resultSkeletons = new ArrayList<String>();
+
+    	try{
+			ResourceSet pollsSkeletons = queryPollsSkeletonsDB("/p:poll[.//" + criteria + "]"); //AGGIUNGI I CRITERI
+
+			if (pollsSkeletons.getSize() > 0) {
+	        	ResourceIterator it = pollsSkeletons.getIterator();
+	            while (it.hasMoreResources()) {
+	                //preleviamo il singolo risultato e le convertiamo in risorsa xml, poichè sappiamo cosa stiamo estraendo
+	                XMLResource res = (XMLResource) it.nextResource();
+	                //collezioniamo gli id delle risorse così ottenuti
+	                resultSkeletons.add(res.getId());
+	            }
+	        }
+    	} catch (XMLDBException ex) {
+            throw new RepositoryError("ERRORE di accesso alla base di dati: " + ex.getMessage());
+        }
+		return resultSkeletons;
+    	
+    }	
+
+	@Override
+	public List<String> getPollSkeletonByCode(String code) throws RepositoryError {
+		System.out.println("getPollSkeletonByCode "+getPollSkeletonBy("p:pollHead/p:code='" + code + "'"));
+		return getPollSkeletonBy("p:pollHead/p:code='" + code + "'");
+	}
+
+
+	/* Questo metodo, dato l'id della risorsa xml, restituisce una coppia CODE TITLE */
+	@Override
+	public HashMap<String, String> getPollsCodeAndTitleById(String id) throws RepositoryError {
+		
+		HashMap<String, String> codeTitle = new HashMap<String, String>();
+		Collection coll = null;
+		try {
+			coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
+//			XMLResource res = (XMLResource)coll.getResource(id);
+
+			XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
+			//carichiamo i binding dei namespace nel servizio di query
+            for (Entry<String, String> entry : namespaces.entrySet()) {
+                xpqs.setNamespace(entry.getKey(), entry.getValue());
+            }
+            
+			ResourceSet codeResSet = xpqs.queryResource(id, "/p:poll/p:pollHead/p:code/text()");
+			Resource codeRes = codeResSet.getResource(0);
+			
+			ResourceSet titleResSet = xpqs.queryResource(id, "/p:poll/p:pollHead/p:title/text()");
+			Resource titleRes = titleResSet.getResource(0);
+			
+			
+			String code = codeRes.getContent().toString();
+			String title = titleRes.getContent().toString();
+			
+			codeTitle.put(code, title);
+			
+		} catch (XMLDBException e) {
+			e.printStackTrace();
+		}
+		System.out.println("CODETITLE "+codeTitle);
+		
+		return codeTitle;
+	}
+	
 }

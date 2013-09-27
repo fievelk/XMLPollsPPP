@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<poll>
+
+	<pollHead>
+		<code>1</code>
+		<title>Valutazione dei servizi universitari</title>
+		<description>Il sondaggio si prefigge lo scopo di raccogliere e presentare una stima delle condizioni globali dei servizi universitari</description>
+		<author>Pierpaolo Pantone</author>
+	</pollHead>
+	<pollBody>
+	</pollBody>
+</poll>

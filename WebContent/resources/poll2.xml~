@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<poll xmlns="http://it.univaq.mwt.xml/poll" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://it.univaq.mwt.xml/poll poll.xsd">
+    <pollHead>
+        <code>1</code>
+        <title>Valutazione dei servizi universitari</title>
+        <description>Il sondaggio si prefigge lo scopo di raccogliere e presentare una stima delle condizioni globali dei servizi universitari</description>
+        <author>Pierpaolo Pantone</author>
+        <date>2013-09-15T11:53:00</date>
+    </pollHead>
+    <pollBody>
+        <topic code="T1">
+            <topicHead>
+                <title>Servizi igienici</title>
+                <description>Analisi sulla condizione dei servizi igienico-sanitari presenti nell'universit (bagni)</description>
+            </topicHead>
+            <topicBody>
+                <question code="T1Q1">Come giudichi complessivamente l'igiene della tua universit</question>
+                <option code="T1Q1_1">Il livello globale di igiene molto buono.</option>
+                <option code="T1Q1_2">Il livello globale di igiene tollerabile ma potrebbe migliorare.</option>
+                <option code="T1Q1_3">Il livello globale di igiene vergognoso, qualcuno dovrebbe urgentemente intervenire.</option>
+                <question code="T1Q2">I locali universitari sono puliti?</question>
+                <option code="T1Q2_1">Lorem Ipsum</option>
+                <option code="T1Q2_2">Lorem Ipsum</option>
+                <option code="T1Q2_3">Lorem Ipsum</option>
+            </topicBody>
+        </topic>
+    </pollBody>
+</poll>
+
