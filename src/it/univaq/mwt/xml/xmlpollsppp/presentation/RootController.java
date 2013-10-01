@@ -30,6 +30,7 @@ public class RootController {
 	public String pollForm(@PathVariable("pollId")String prodId, Model model) throws RepositoryError, XMLDBException {
 		String pollSkeleton = service.getPollSkeletonByCode(prodId);
 		String xslt = service.getPollsXSLT();
+//		System.out.println(pollSkeleton);
 		String outputxml = XSLTTransform.transformFromString(pollSkeleton, xslt);
 		model.addAttribute("poll",outputxml);
 		return "poll.form";
