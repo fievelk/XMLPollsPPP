@@ -29,7 +29,6 @@ public class RootController {
 	@RequestMapping("/polls/{pollId}")
 	public String pollForm(@PathVariable("pollId")String prodId, Model model) throws RepositoryError, XMLDBException {
 		String pollSkeleton = service.getPollSkeletonByCode(prodId);
-//		String outputxml = XSLTTransform.transformFromString(pollSkeleton, new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll_prova.xslt"));
 		String xslt = service.getPollsXSLT();
 		String outputxml = XSLTTransform.transformFromString(pollSkeleton, xslt);
 		model.addAttribute("poll",outputxml);
