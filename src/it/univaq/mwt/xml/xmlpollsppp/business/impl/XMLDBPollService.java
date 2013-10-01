@@ -188,15 +188,11 @@ public class XMLDBPollService implements PollService {
         //prelevo il singolo xslt e lo converto in XMLResource
 		try {
 			ResourceSet xsltResourceSet = queryPollsXSLTDB("/xsl:stylesheet");
-			System.out.println(xsltResourceSet);
-			System.out.println("getResource "+ xsltResourceSet.getResource(0));
 			xslt = xsltResourceSet.getResource(0).getContent().toString();
 		} catch (XMLDBException e) {
 			e.printStackTrace();
 		}
             
-		System.out.println("XSLT: "+xslt);
-		
 		return xslt;
 	}	    
 

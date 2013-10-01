@@ -1,6 +1,5 @@
 package it.univaq.mwt.xml.xmlpollsppp.business;
 
-import java.io.File;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -41,6 +40,7 @@ public class XSLTTransform {
 			t.transform(xmlStringSource, result);
 			
 			output = writer.toString();
+			System.out.println(output);
 			
 		} catch (TransformerConfigurationException e) {
 			e.printStackTrace();

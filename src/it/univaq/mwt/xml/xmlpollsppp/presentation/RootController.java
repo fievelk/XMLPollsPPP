@@ -4,7 +4,6 @@ import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
-import java.io.File;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
