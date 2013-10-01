@@ -23,7 +23,7 @@ import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Poll;
 
 @Service
-public class JDBCPollService implements PollService {
+public class XMLDBPollService implements PollService {
 
 //	@Autowired
 //	private DataSource dataSource;
