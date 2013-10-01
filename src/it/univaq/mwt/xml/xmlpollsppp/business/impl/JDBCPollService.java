@@ -60,7 +60,7 @@ public class JDBCPollService implements PollService {
     	
         try {
         	coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
-        	System.out.println("NOME COLLECTION "+coll.getName());
+//        	System.out.println("NOME COLLECTION "+coll.getName());
             XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
             
             //carichiamo i binding dei namespace nel servizio di query
@@ -94,7 +94,7 @@ public class JDBCPollService implements PollService {
                 try {
                     res = i.nextResource();
                     titlesList.add(res.getContent().toString());
-                    System.out.println(res.getContent().toString());
+//                    System.out.println(res.getContent().toString());
                 } finally {
                     //dont forget to cleanup resources
                     try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
@@ -109,51 +109,6 @@ public class JDBCPollService implements PollService {
 	}
 	    
 	
-/*	@Override
-	public List<Poll> getAllPollsSkeletons() throws RepositoryError {
-
-		Collection col = null;
-        XMLResource res = null;
-		
-		try {
-            //acquisiamo un riferimento alla root collection fornendo le credenziali di accesso
-			
-            col = DatabaseManager.getCollection(exist_uri, "admin", "admin");
-//            res = (XMLResource)col.getResource("poll.xml");
-            
-            if(res == null) {
-                System.out.println("document not found!");
-            } else {
-                System.out.println(res.getContent());
-            }
-            
-        } catch (XMLDBException ex) {
-            throw new RepositoryError("ERRORE di creazione della base di dati: " + ex.getMessage());
-        }
-		
-		List<String> pidlist = new ArrayList<String>();
-		
-		try {
-            //costruiamo una query estraendo i metadati (cioè le risorse che abbiamo
-            //precedentemente inserito) corrispondenti a un certo filtro
-            ResourceSet polls = queryDatabase("/p:poll", col);
-            if (polls.getSize() > 0) {
-                //iteriamo tra i risultati
-                ResourceIterator it = polls.getIterator();
-                while (it.hasMoreResources()) {
-                    //preleviamo il singolo risultato e le convertiamo in risorsa xml, poichè sappiamo cosa stiamo estraendo
-                    XMLResource resXML = (XMLResource) it.nextResource();
-                    //collezioniamo gli id delle risorse così ottenuti
-                    pidlist.add(resXML.getId());
-                }
-            }
-        } catch (XMLDBException ex) {
-            throw new RepositoryError("ERRORE di accesso alla base di dati: " + ex.getMessage());
-        }
-        
-        return null;
-	}
-	*/
 	@Override
 	public List<Poll> getAllSubmittedPolls() {
 		// TODO Auto-generated method stub
@@ -176,8 +131,8 @@ public class JDBCPollService implements PollService {
 	            while (it.hasMoreResources()) {
 	                //preleviamo il singolo risultato e le convertiamo in risorsa xml, poichè sappiamo cosa stiamo estraendo
 	                XMLResource res = (XMLResource) it.nextResource();
-	                //collezioniamo gli id delle risorse così ottenuti
-	                resultSkeletons.add(res.getId());
+	                //collezioniamo le risorse come String
+	                resultSkeletons.add(res.getContent().toString());
 	            }
 	        }
     	} catch (XMLDBException ex) {
@@ -188,9 +143,9 @@ public class JDBCPollService implements PollService {
     }	
 
 	@Override
-	public List<String> getPollSkeletonByCode(String code) throws RepositoryError {
-		System.out.println("getPollSkeletonByCode "+getPollSkeletonBy("p:pollHead/p:code='" + code + "'"));
-		return getPollSkeletonBy("p:pollHead/p:code='" + code + "'");
+	public String getPollSkeletonByCode(String code) throws RepositoryError {
+//		System.out.println("getPollSkeletonByCode "+getPollSkeletonBy("p:pollHead/p:code='" + code + "'"));
+		return getPollSkeletonBy("p:pollHead/p:code='" + code + "'").get(0);
 	}
 
 
@@ -225,9 +180,77 @@ public class JDBCPollService implements PollService {
 		} catch (XMLDBException e) {
 			e.printStackTrace();
 		}
-		System.out.println("CODETITLE "+codeTitle);
+//		System.out.println("CODETITLE "+codeTitle);
 		
 		return codeTitle;
 	}
 	
+	@Override
+	public HashMap<String, String> getAllPollsCodeAndTitle() throws RepositoryError {
+		
+		HashMap<String, String> codeTitle = new HashMap<String, String>();
+		Collection coll = null;
+		try {
+			coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
+
+			XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
+			//carichiamo i binding dei namespace nel servizio di query
+            for (Entry<String, String> entry : namespaces.entrySet()) {
+                xpqs.setNamespace(entry.getKey(), entry.getValue());
+            }
+            
+            ResourceSet codeResSet = xpqs.query("/p:poll/p:pollHead/p:code/text()");
+            
+			if (codeResSet.getSize() > 0) {
+	            ResourceIterator it = codeResSet.getIterator();
+	            while (it.hasMoreResources()) {
+	                //prelevo il singolo risultato e lo converto in String
+	                XMLResource res = (XMLResource) it.nextResource();
+	                
+	                
+	                //collezioniamo le risorse come String
+	                codeTitle.add(res.getContent().toString());
+	            }
+	        }
+            
+            
+			ResourceSet titleResSet = xpqs.query("/p:poll/p:pollHead/p:title/text()");
+			Resource titleRes = titleResSet.getResource(0);
+			
+			
+			String code = codeRes.getContent().toString();
+			String title = titleRes.getContent().toString();
+			
+			codeTitle.put(code, title);
+			
+		} catch (XMLDBException e) {
+			e.printStackTrace();
+		}
+//		System.out.println("CODETITLE "+codeTitle);
+		
+		return codeTitle;
+	}	
+
+	
+	// PROVA
+    
+    @Override
+	public String getPollSkeletonAsString() throws XMLDBException {
+    	
+    	String xmlpoll = null;
+    		
+			ResourceSet pollsSkeletons;
+			try {
+				pollsSkeletons = queryPollsSkeletonsDB("/p:poll[.//p:pollHead/p:code='1']");
+				xmlpoll = pollsSkeletons.getResource(0).getContent().toString();
+			} catch (RepositoryError e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} // per ora è statico
+		
+//			System.out.println("RISULTATO METODO "+xmlpoll);
+		return xmlpoll;
+    	
+    }
+
 }

@@ -13,5 +13,12 @@
     <definition name="common.index" extends="standard">
         <put-attribute name="body" value="/WEB-INF/views/common/index.jsp"/>
     </definition>
+    
+	<definition name="empty" template="/WEB-INF/views/layout/empty.jsp">
+    </definition>
+    
+    <definition name="poll.form" extends="empty">
+        <put-attribute name="body" value="/WEB-INF/views/polls/form.jsp"/>
+    </definition>    
 
 </tiles-definitions>
