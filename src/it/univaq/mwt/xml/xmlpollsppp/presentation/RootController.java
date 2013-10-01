@@ -1,15 +1,18 @@
 package it.univaq.mwt.xml.xmlpollsppp.presentation;
 
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
+import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
+import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.xmldb.api.base.XMLDBException;
 
 @Controller
 public class RootController {
@@ -18,25 +21,23 @@ public class RootController {
 	private PollService service;
 
 	@RequestMapping("/")
-	public String getAllPolls(Model model) throws RepositoryError {
-		List<String> pollTitles = service.getAllPollsSkeletons();
-		model.addAttribute("pollTitles",pollTitles);
-		
-		List<String> pollBoh = service.getPollSkeletonByCode("1");
-		System.out.println("Controller getPollSkeletonByCode "+pollBoh);
+	public String getAllPolls(Model model) throws RepositoryError, XMLDBException {
 		
 		HashMap<String,String> codeTitles = service.getPollsCodeAndTitleById("poll.xml");
-		System.out.println("CONTROLLER CODETITLE " + codeTitles);
-		
 		model.addAttribute("codeTitles", codeTitles);
+		System.out.println(codeTitles);
 		
 		return "common.index";
 	}
 	
-/*	@RequestMapping("/")
-	public String getAllPolls(Model model) throws RepositoryError {
-		List<String> polls = service.getAllPollsSkeletons();
-		model.addAttribute("polls",polls);
-		return "common.index";
-	}*/
+	@RequestMapping("/polls/{pollId}")
+	public String pollForm(@PathVariable("pollId")String prodId, Model model) throws RepositoryError, XMLDBException {
+		
+		String pollSkeleton = service.getPollSkeletonByCode(prodId);
+		String outputxml = XSLTTransform.transformFromString(pollSkeleton, new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll_prova.xslt"));
+		model.addAttribute("poll",outputxml);
+		
+		return "poll.form";
+	}
+
 }

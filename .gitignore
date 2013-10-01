@@ -1,1 +1,9 @@
+# Ignores logs
 *.log
+
+# Ignores classpath
+.classpath
+
+# Ignores compiled sources and others
+*.class
+build/
