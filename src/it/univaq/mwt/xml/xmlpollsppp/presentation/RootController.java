@@ -5,7 +5,7 @@ import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -22,21 +22,18 @@ public class RootController {
 
 	@RequestMapping("/")
 	public String getAllPolls(Model model) throws RepositoryError, XMLDBException {
-		
-		HashMap<String,String> codeTitles = service.getPollsCodeAndTitleById("poll.xml");
+		TreeMap<String,String> codeTitles = service.getAllPollsCodeAndTitle();
 		model.addAttribute("codeTitles", codeTitles);
-		System.out.println(codeTitles);
-		
 		return "common.index";
 	}
 	
 	@RequestMapping("/polls/{pollId}")
 	public String pollForm(@PathVariable("pollId")String prodId, Model model) throws RepositoryError, XMLDBException {
-		
 		String pollSkeleton = service.getPollSkeletonByCode(prodId);
-		String outputxml = XSLTTransform.transformFromString(pollSkeleton, new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll_prova.xslt"));
+//		String outputxml = XSLTTransform.transformFromString(pollSkeleton, new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll_prova.xslt"));
+		String xslt = service.getPollsXSLT();
+		String outputxml = XSLTTransform.transformFromString(pollSkeleton, xslt);
 		model.addAttribute("poll",outputxml);
-		
 		return "poll.form";
 	}
 

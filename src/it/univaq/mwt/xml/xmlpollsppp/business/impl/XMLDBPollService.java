@@ -5,13 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
-import org.exist.xmldb.EXistResource;
 import org.springframework.stereotype.Service;
 import org.xmldb.api.DatabaseManager;
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Database;
-import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.ResourceIterator;
 import org.xmldb.api.base.ResourceSet;
 import org.xmldb.api.base.XMLDBException;
@@ -20,7 +19,6 @@ import org.xmldb.api.modules.XPathQueryService;
 
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
-import it.univaq.mwt.xml.xmlpollsppp.business.model.Poll;
 
 @Service
 public class XMLDBPollService implements PollService {
@@ -31,14 +29,14 @@ public class XMLDBPollService implements PollService {
 	private final static String poll_ns = "http://it.univaq.mwt.xml/poll";
 	static Map<String, String> namespaces;
 //	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
-	public static final String exist_uri = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/polls";
+	public static final String exist_uri_polls = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/polls";
+	public static final String exist_uri_xslt = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/xslt";
 	
 	static {
-		try {
-			
             namespaces = new HashMap();
             namespaces.put("p", poll_ns);
             
+        try {    
 			Class driver = Class.forName("org.exist.xmldb.DatabaseImpl");
 			Database database = (Database) driver.newInstance();
 			DatabaseManager.registerDatabase(database);
@@ -54,12 +52,12 @@ public class XMLDBPollService implements PollService {
 		}
 	}
 	
-    //esegue una query XPath sul database
+    //esegue una query XPath sul database degi Polls Skeletons
     private ResourceSet queryPollsSkeletonsDB(String xpath) throws RepositoryError {
     	Collection coll = null;
     	
         try {
-        	coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
+        	coll = DatabaseManager.getCollection(exist_uri_polls, "admin", "admin");
 //        	System.out.println("NOME COLLECTION "+coll.getName());
             XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
             
@@ -78,44 +76,6 @@ public class XMLDBPollService implements PollService {
         }
     }	
     
-    
-	@Override
-	public List<String> getAllPollsSkeletons() throws RepositoryError {
-
-		List<String> titlesList = new ArrayList<String>();
-		try {
-			
-			ResourceSet result = queryPollsSkeletonsDB("/p:poll/p:pollHead/p:title/text()");
-//			ResourceSet result = queryPollsSkeletonsDB("/p:poll");
-            ResourceIterator i = result.getIterator();
-            Resource res = null;
-            
-            while(i.hasMoreResources()) {
-                try {
-                    res = i.nextResource();
-                    titlesList.add(res.getContent().toString());
-//                    System.out.println(res.getContent().toString());
-                } finally {
-                    //dont forget to cleanup resources
-                    try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
-                }
-            }
-            
-        } catch (XMLDBException e) {
-			e.printStackTrace();
-        }
-		
-        return titlesList;
-	}
-	    
-	
-	@Override
-	public List<Poll> getAllSubmittedPolls() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-
  /* ZONA ORDINATA */
 	
     @Override
@@ -144,85 +104,46 @@ public class XMLDBPollService implements PollService {
 
 	@Override
 	public String getPollSkeletonByCode(String code) throws RepositoryError {
-//		System.out.println("getPollSkeletonByCode "+getPollSkeletonBy("p:pollHead/p:code='" + code + "'"));
 		return getPollSkeletonBy("p:pollHead/p:code='" + code + "'").get(0);
 	}
 
 
-	/* Questo metodo, dato l'id della risorsa xml, restituisce una coppia CODE TITLE */
 	@Override
-	public HashMap<String, String> getPollsCodeAndTitleById(String id) throws RepositoryError {
+	public TreeMap<String, String> getAllPollsCodeAndTitle() throws RepositoryError {
 		
-		HashMap<String, String> codeTitle = new HashMap<String, String>();
+		TreeMap<String, String> codeTitle = new TreeMap<String, String>();
 		Collection coll = null;
 		try {
-			coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
-//			XMLResource res = (XMLResource)coll.getResource(id);
+			/*coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
 
 			XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
-			//carichiamo i binding dei namespace nel servizio di query
+			
+			//carico i binding dei namespace nel servizio di query
             for (Entry<String, String> entry : namespaces.entrySet()) {
                 xpqs.setNamespace(entry.getKey(), entry.getValue());
-            }
+            }*/
             
-			ResourceSet codeResSet = xpqs.queryResource(id, "/p:poll/p:pollHead/p:code/text()");
-			Resource codeRes = codeResSet.getResource(0);
-			
-			ResourceSet titleResSet = xpqs.queryResource(id, "/p:poll/p:pollHead/p:title/text()");
-			Resource titleRes = titleResSet.getResource(0);
-			
-			
-			String code = codeRes.getContent().toString();
-			String title = titleRes.getContent().toString();
-			
-			codeTitle.put(code, title);
-			
-		} catch (XMLDBException e) {
-			e.printStackTrace();
-		}
-//		System.out.println("CODETITLE "+codeTitle);
-		
-		return codeTitle;
-	}
-	
-	@Override
-	public HashMap<String, String> getAllPollsCodeAndTitle() throws RepositoryError {
-		
-		HashMap<String, String> codeTitle = new HashMap<String, String>();
-		Collection coll = null;
-		try {
-			coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
-
-			XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
-			//carichiamo i binding dei namespace nel servizio di query
-            for (Entry<String, String> entry : namespaces.entrySet()) {
-                xpqs.setNamespace(entry.getKey(), entry.getValue());
-            }
+//            ResourceSet codeResSet = xpqs.query("/p:poll/p:pollHead/p:code/text()");
+            ResourceSet codeResSet = queryPollsSkeletonsDB("/p:poll/p:pollHead/p:code/text()");
             
-            ResourceSet codeResSet = xpqs.query("/p:poll/p:pollHead/p:code/text()");
             
 			if (codeResSet.getSize() > 0) {
 	            ResourceIterator it = codeResSet.getIterator();
 	            while (it.hasMoreResources()) {
-	                //prelevo il singolo risultato e lo converto in String
-	                XMLResource res = (XMLResource) it.nextResource();
+	                //prelevo il singolo code e lo converto in String
+	                String code = it.nextResource().getContent().toString();
 	                
+	                // Prelevo il titolo relativo al codice e lo converto in String
+//	                XMLResource titleRes = (XMLResource) xpqs.query("/p:poll/p:pollHead[p:code='" + code + "']/p:title/text()").getResource(0);
+	                ResourceSet resSet = queryPollsSkeletonsDB("/p:poll/p:pollHead[p:code='" + code + "']/p:title/text()");
+	                XMLResource titleRes = (XMLResource) resSet.getResource(0);
 	                
-	                //collezioniamo le risorse come String
-	                codeTitle.add(res.getContent().toString());
+	                String title = titleRes.getContent().toString();
+	                
+	                // Aggiungo code e title all'hasmap
+	                codeTitle.put(code, title);
 	            }
 	        }
-            
-            
-			ResourceSet titleResSet = xpqs.query("/p:poll/p:pollHead/p:title/text()");
-			Resource titleRes = titleResSet.getResource(0);
-			
-			
-			String code = codeRes.getContent().toString();
-			String title = titleRes.getContent().toString();
-			
-			codeTitle.put(code, title);
-			
 		} catch (XMLDBException e) {
 			e.printStackTrace();
 		}
@@ -230,27 +151,53 @@ public class XMLDBPollService implements PollService {
 		
 		return codeTitle;
 	}	
-
 	
-	// PROVA
+	/* Query sul db delle trasformazioni XSLT */
+	
+    //esegue una query XPath sul database
+    private ResourceSet queryPollsXSLTDB(String xpath) throws RepositoryError {
+    	Collection coll = null;
+    	namespaces.put("xsl", "http://www.w3.org/1999/XSL/Transform");
+    	
+        try {
+        	coll = DatabaseManager.getCollection(exist_uri_xslt, "admin", "admin");
+//        	System.out.println("NOME COLLECTION "+coll.getName());
+            XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
+            
+            //carichiamo i binding dei namespace nel servizio di query
+            for (Entry<String, String> entry : namespaces.entrySet()) {
+                xpqs.setNamespace(entry.getKey(), entry.getValue());
+            }
+            
+            //eseguiamo la query e restituiamo i risultati
+            ResourceSet result = xpqs.query(xpath);
+            
+            return result;
+            
+        } catch (XMLDBException ex) {
+            throw new RepositoryError("ERRORE di accesso alla base di dati: " + ex.getMessage());
+        }
+    }		
     
+
     @Override
-	public String getPollSkeletonAsString() throws XMLDBException {
-    	
-    	String xmlpoll = null;
-    		
-			ResourceSet pollsSkeletons;
-			try {
-				pollsSkeletons = queryPollsSkeletonsDB("/p:poll[.//p:pollHead/p:code='1']");
-				xmlpoll = pollsSkeletons.getResource(0).getContent().toString();
-			} catch (RepositoryError e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} // per ora è statico
+	public String getPollsXSLT() throws RepositoryError {
 		
-//			System.out.println("RISULTATO METODO "+xmlpoll);
-		return xmlpoll;
-    	
-    }
+		String xslt = null;
+		
+        //prelevo il singolo xslt e lo converto in XMLResource
+		try {
+			ResourceSet xsltResourceSet = queryPollsXSLTDB("/xsl:stylesheet");
+			System.out.println(xsltResourceSet);
+			System.out.println("getResource "+ xsltResourceSet.getResource(0));
+			xslt = xsltResourceSet.getResource(0).getContent().toString();
+		} catch (XMLDBException e) {
+			e.printStackTrace();
+		}
+            
+		System.out.println("XSLT: "+xslt);
+		
+		return xslt;
+	}	    
 
 }
