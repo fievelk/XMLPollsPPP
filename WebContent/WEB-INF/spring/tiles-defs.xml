@@ -21,4 +21,8 @@
         <put-attribute name="body" value="/WEB-INF/views/polls/form.jsp"/>
     </definition>    
 
+    <definition name="poll.result" extends="standard">
+        <put-attribute name="body" value="/WEB-INF/views/polls/result.jsp"/>
+    </definition>    
+
 </tiles-definitions>

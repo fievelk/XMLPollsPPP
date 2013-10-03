@@ -43,7 +43,7 @@ public class XSLTTransform {
 			t.transform(xmlStringSource, result);
 			
 			output = writer.toString();
-			System.out.println(output);
+//			System.out.println(output);
 			
 		} catch (TransformerConfigurationException e) {
 			e.printStackTrace();
