@@ -2,6 +2,7 @@ package it.univaq.mwt.xml.xmlpollsppp.presentation;
 
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.StringToXMLProcessor;
+import it.univaq.mwt.xml.xmlpollsppp.business.SubmittedPollGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
