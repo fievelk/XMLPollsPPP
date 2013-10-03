@@ -29,6 +29,7 @@ public class XMLDBPollService implements PollService {
 	
 	private final static String poll_ns = "http://it.univaq.mwt.xml/poll";
 	Map<String, String> namespaces;
+	Map<String, String> namespacesXslt;
 	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
 //	private static final String exist_uri_polls = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/polls";
 //	private static final String exist_uri_xslt = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/xslt";
@@ -44,6 +45,10 @@ public class XMLDBPollService implements PollService {
 		try {
 			namespaces = new HashMap();
 			namespaces.put("p", poll_ns);
+			
+			namespacesXslt = new HashMap();
+			namespacesXslt.put("xsl", "http://www.w3.org/1999/XSL/Transform");
+			
 			Class driver = Class.forName(existDriver);
 			Database database = (Database) driver.newInstance();
 			DatabaseManager.registerDatabase(database);
@@ -70,7 +75,7 @@ public class XMLDBPollService implements PollService {
             cms = (CollectionManagementService) dbRepository.getService("CollectionManagementService", "1.0");
             dbPollsSkeletons = cms.createCollection("pollsSkeletons");
             dbSubmittedPolls = cms.createCollection("submittedPolls");
-            dbXSLT = cms.createCollection("XSLT");
+            dbXSLT = cms.createCollection("xsltPolls");
 
         } catch (XMLDBException ex) {
             throw new RepositoryError("ERRORE di creazione della base di dati: " + ex.getMessage());
@@ -81,14 +86,22 @@ public class XMLDBPollService implements PollService {
     private ResourceSet queryDB(String xpath, Collection coll) throws RepositoryError {
     	
         try {
-        	coll = DatabaseManager.getCollection(exist_uri, "admin", "admin");
-//        	System.out.println("NOME COLLECTION "+coll.getName());
             XPathQueryService xpqs = (XPathQueryService)coll.getService("XPathQueryService", "1.0");
             
             //carichiamo i binding dei namespace nel servizio di query
-            for (Entry<String, String> entry : namespaces.entrySet()) {
-                xpqs.setNamespace(entry.getKey(), entry.getValue());
-            }
+//            System.out.println("NOMECOLLECTION "+coll.getName());
+            
+            // Se la collection nella quale si fa la query è dbXSLT, uso il namespace specifico
+            if (coll.getName().equals(dbXSLT.getName())){
+            	for (Entry<String, String> entry : namespacesXslt.entrySet()) {
+                    xpqs.setNamespace(entry.getKey(), entry.getValue());
+                }
+            } else {
+                for (Entry<String, String> entry : namespaces.entrySet()) {
+                    xpqs.setNamespace(entry.getKey(), entry.getValue());            	
+                }
+            }    
+
             
             //eseguiamo la query e restituiamo i risultati
             ResourceSet result = xpqs.query(xpath);
@@ -118,12 +131,12 @@ public class XMLDBPollService implements PollService {
 	                // Prendo l'id del documento specifico
 //	                String resId = res.getDocumentId();
 	                String resId = res.getId();
+//	                System.out.println("RESID "+resId);
 	                
 	                XMLResource resWithXMLDeclaration = (XMLResource) dbPollsSkeletons.getResource(resId);
-	                
 	                //collezioniamo le risorse come String
 	                resultSkeletons.add(resWithXMLDeclaration.getContent().toString());
-	                System.out.println(resWithXMLDeclaration.getContent().toString());
+//	                System.out.println(resWithXMLDeclaration.getContent().toString());
 	            }
 	        }
     	} catch (XMLDBException ex) {
@@ -178,11 +191,12 @@ public class XMLDBPollService implements PollService {
 	public String getPollsXSLT() throws RepositoryError {
 		
 		String xslt = null;
-		
-        //prelevo il singolo xslt e lo converto in XMLResource
+        
 		try {
+			//prelevo il singolo xslt e lo converto in Stringa
 			ResourceSet xsltResourceSet = queryDB("/xsl:stylesheet", dbXSLT);
 			xslt = xsltResourceSet.getResource(0).getContent().toString(); // Al momento c'è un solo XSLT, poi andrà modificato
+//			System.out.println(xslt);
 		} catch (XMLDBException e) {
 			e.printStackTrace();
 		}

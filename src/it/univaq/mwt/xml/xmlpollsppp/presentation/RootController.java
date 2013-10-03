@@ -36,7 +36,6 @@ public class RootController {
 	public String pollForm(@PathVariable("skeletonId") String skeletonId, Model model)  throws RepositoryError {
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String xslt = service.getPollsXSLT();
-//		System.out.println(pollSkeleton);
 		String outputxml = XSLTTransform.transformFromString(pollSkeleton, xslt);
 		model.addAttribute("poll",outputxml);
 		return "poll.form";

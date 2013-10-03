@@ -19,8 +19,8 @@ public class SubmittedPollGenerator {
 	
 	public static String generateSubmittedPoll(String pollSkeleton) {
 		
-//		parseStAXDocument(pollSkeleton);
-		StAXParseDocument(new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll.xml"));
+		parseStAXDocument(pollSkeleton);
+//		StAXParseDocument(new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll.xml"));
 		return null;
 	}
 
@@ -28,12 +28,19 @@ public class SubmittedPollGenerator {
 	private static void parseStAXDocument(String inputXmlString) {
         XMLInputFactory xif = XMLInputFactory.newInstance();
         XMLStreamReader xsr = null;
+        
+        /* Sono costretto a inserire manualmente la stringa con la dichiarazione dell'encoding
+         * altrimenti l'XMLStreamReader reagirà al documento come se fosse UTF-8 (per default).
+         * Non c'è modo per cambiare questo comportamento tramite metodi o set di parametri */
+        
+        inputXmlString = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"+inputXmlString;
     	
         try {
-        	// Devo creare uno Stream che contenga il documento XML da leggere
+        	// Creo uno Stream che contenga il documento XML da leggere
             // converto la String in un InputStream
         	InputStream inputStream = new ByteArrayInputStream(inputXmlString.getBytes("ISO-8859-1"));
         	
+        	System.out.println(inputXmlString);
         	/*StringWriter writer = new StringWriter();
         	try {
 				IOUtils.copy(inputStream, writer, "UTF-8");
