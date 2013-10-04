@@ -1,11 +1,13 @@
 package it.univaq.mwt.xml.xmlpollsppp.business;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
@@ -34,99 +36,52 @@ public class SubmittedPollGenerator {
 		for (String keyValue : keyValues) {
 			String[] pairs = keyValue.split("=");
 			map.put(pairs[0], pairs.length == 1 ? "" : pairs[1]);
-			System.out.println(pairs[0] + "-> " + pairs[1]);
+//			System.out.println(pairs[0] + "-> " + pairs[1]);
 		}
 		return map;
 	}
 	
 	
-	public static String generateSubmittedPoll(String pollSkeleton, String pollResults) {
-		
-		Map<String,String> questionAnswers = fromStringToMap(pollResults);
-		
-		generateSubmissionPoll(pollSkeleton);
-		
-//		StAXParseDocument(new File("/home/fievelk/Dropbox/MWT_mia/xml/casa/progettouniPoll/poll.xml"));
-		return null;
-	}
-
-	
-/*	private static void parseStAXDocument(String inputXmlString) {
-        XMLInputFactory xif = XMLInputFactory.newInstance();
-        XMLStreamReader xsr = null;
-        
-         Sono costretto a inserire manualmente la stringa con la dichiarazione dell'encoding
-         * altrimenti l'XMLStreamReader reagirà al documento come se fosse UTF-8 (per default).
-         * Non c'è modo per cambiare questo comportamento tramite metodi o set di parametri 
-        
-        inputXmlString = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"+inputXmlString;
-    	
-        try {
-        	// Creo uno Stream che contenga il documento XML da leggere
-            // converto la String in un InputStream
-        	InputStream inputStream = new ByteArrayInputStream(inputXmlString.getBytes("ISO-8859-1"));
-        	
-        	System.out.println(inputXmlString);
-        	
-        	// Genero un XMLStreamReader passandogli lo stream della stringa xml da leggere
-			xsr = xif.createXMLStreamReader(inputStream);
-			
-			while (xsr.hasNext()){
-				int next = xsr.next();
-				if (xsr.isWhiteSpace()) continue;
-				switch (next) {
-					case XMLStreamReader.START_ELEMENT:	
-//						System.out.println("STARTELEMENT "+xsr.getLocalName());
-				}
-			} 
-		} catch (XMLStreamException e) {
-			e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} finally {
-            try {
-                if (xsr != null) {
-                    xsr.close();
-                }
-            } catch (XMLStreamException ex) {
-            }
-        }
-	}*/
 	
 	/* Questo metodo prende l'xml dello skeleton e lo trasforma in un xml di submission con le risposte */
-	private static void generateSubmissionPoll(String inputXmlString) {
+	public static String generateSubmissionPoll(String pollSkeleton, String pollResults) {
+		Map<String,String> questionAnswers = fromStringToMap(pollResults);
+		
         XMLInputFactory xif = XMLInputFactory.newInstance();
         
         /* Sono costretto a inserire manualmente la stringa con la dichiarazione dell'encoding
          * altrimenti l'XMLStreamReader reagirà al documento come se fosse UTF-8 (per default).
          * Non c'è modo per cambiare questo comportamento tramite metodi o set di parametri */
         
-        inputXmlString = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"+inputXmlString;
+        pollSkeleton = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"+pollSkeleton;
         XMLEventReader xer = null;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         
         try {
         	// Creo uno Stream che contenga il documento XML da leggere
             // converto la String in un InputStream
-        	InputStream inputStream = new ByteArrayInputStream(inputXmlString.getBytes("ISO-8859-1"));
+        	InputStream inputStream = new ByteArrayInputStream(pollSkeleton.getBytes("ISO-8859-1"));
         	xer = xif.createXMLEventReader(inputStream);
         	
         	XMLOutputFactory xof = XMLOutputFactory.newInstance();
         	
-        	XMLEventWriter writer = xof.createXMLEventWriter(new OutputStreamWriter(System.out, "UTF-8")); // Perché con ISO-8859-1 non funziona?
+        	
+
+			//        	XMLEventWriter writer = xof.createXMLEventWriter(new OutputStreamWriter(System.out, "UTF-8")); // Perché con ISO-8859-1 non funziona?
+        	XMLEventWriter writer = xof.createXMLEventWriter(new OutputStreamWriter(byteArrayOutputStream, "UTF-8")); // Perché con ISO-8859-1 non funziona?
         	XMLEventFactory eventFactory = XMLEventFactory.newInstance();
         	
         	
-        	while (xer.hasNext()) {
+/*        	while (xer.hasNext()) {
                 XMLEvent event = xer.nextEvent();
                 
-                if (event.getEventType() == XMLEvent.START_ELEMENT) {
+                if (event.getEventType() == XMLEvent.START_ELEMENT && event.asStartElement().getName().getLocalPart().equals("option")) {
 //                	System.out.println("elemento: "+event.asStartElement().getName().getLocalPart());
-                    if (event.asStartElement().getName().getLocalPart().equals("option")) {
                     	// Lo sostituisco con un elemento answer
                     	writer.add(eventFactory.createStartElement("", null, "answer"));
                         
-                    	/* Itero sugli attributi dell'option. Se sono "code" ne prendo il valore e li aggiungo come
-                    	 * attributi dell'elemento answer che ho creato	 */
+                    	 Itero sugli attributi dell'option. Se sono "code" ne prendo il valore e li aggiungo come
+                    	 * attributi dell'elemento answer che ho creato	 
                     	Iterator ite = event.asStartElement().getAttributes();
                     	while (ite.hasNext()) {
                     		Attribute attr = (Attribute) ite.next();
@@ -136,7 +91,34 @@ public class SubmittedPollGenerator {
                     		} // Cosa succede se il prossimo attributo non è un code?
                     	}
                         event = xer.nextEvent();
-                    }
+                }
+                writer.add(event);
+            }*/
+        	
+        	while (xer.hasNext()) {
+                XMLEvent event = xer.nextEvent();
+                
+                if (event.getEventType() == XMLEvent.START_ELEMENT && event.asStartElement().getName().getLocalPart().equals("option")) {
+                	// se è un elemento option, ne prendo gli attributi
+
+
+                    /* Itero sugli attributi dell'option. Se sono "code" ne prendo il valore e li aggiungo come
+                	 * attributi dell'elemento answer che ho creato	 */
+                	Iterator ite = event.asStartElement().getAttributes();
+
+                    // finché ci sono attributi, li controllo. Se si chiamano "code" e il loro valore è nella lista, ne prendo il valore.
+                    // e scrivo l'elemento
+                    //answer con il loro valore
+
+                	while (ite.hasNext()) {
+                		Attribute attr = (Attribute) ite.next();
+                		if (attr.getName().getLocalPart().equals("code") && questionAnswers.containsValue(attr.getValue())) {
+                			String optionCodeValue = attr.getValue();
+                            writer.add(eventFactory.createStartElement("", null, "answer"));
+                			writer.add(eventFactory.createAttribute("code", optionCodeValue));
+                		} // Cosa succede se il prossimo attributo non è un code?
+                	}
+                    event = xer.nextEvent();
                 }
                 writer.add(event);
             }
@@ -154,6 +136,10 @@ public class SubmittedPollGenerator {
             } catch (XMLStreamException ex) {
             }
         }
+        
+        String result = byteArrayOutputStream.toString();
+        System.out.println(result);
+		return result;
 	}	
 	
 	/*

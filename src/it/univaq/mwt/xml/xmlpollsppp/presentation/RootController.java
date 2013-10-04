@@ -46,16 +46,10 @@ public class RootController {
 
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		
-		String submittedPoll = SubmittedPollGenerator.generateSubmittedPoll(pollSkeleton); // Crea il submittedPoll a partire dal pollSkeleton
+		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
 		
 		
-/*		model.addAttribute("result",pollResults);
-		Map<String, String> map = StringToXMLProcessor.fromStringToMap(pollResults);
-//		System.out.println("CODE HIDDEN "+code);
-		
-//		System.out.println(pollResults);
-		
-		StringToXMLProcessor.createAndFillStAXDocument(); */
+		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
 		
 		return "poll.result";
 	}	
