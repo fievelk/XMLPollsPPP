@@ -131,10 +131,12 @@ public class SubmittedPollGenerator {
 
 	private static boolean canConvertOptionToAnswer(StartElement optionStartElementEvent,	Map<String, String> questionAnswers) {
 		Iterator ite = optionStartElementEvent.getAttributes();
-		
+//		System.out.println(optionStartElementEvent.toString());
 		while (ite.hasNext()) {
     		Attribute attr = (Attribute) ite.next();
+    		System.out.println(attr.getName().getLocalPart()+": "+attr.getValue()); // Errore: mi restituisce due volte "code: T4Q3_2"
     		if (attr.getName().getLocalPart().equals("code") && questionAnswers.containsValue(attr.getValue())) {
+    			System.out.println(attr.getName().getLocalPart()+": "+attr.getValue());
     			return true;
     		}
     	}
