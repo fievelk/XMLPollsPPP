@@ -48,7 +48,7 @@ public class RootController {
 		
 		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
 		
-		
+		System.out.println(pollResults);
 		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
 		
 		return "poll.result";
