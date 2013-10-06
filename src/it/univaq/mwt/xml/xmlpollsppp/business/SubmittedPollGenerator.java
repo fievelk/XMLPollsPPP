@@ -2,14 +2,8 @@ package it.univaq.mwt.xml.xmlpollsppp.business;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -21,11 +15,10 @@ import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.Attribute;
+import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import org.apache.commons.io.IOUtils;
 
 public class SubmittedPollGenerator {
 	
@@ -71,56 +64,37 @@ public class SubmittedPollGenerator {
         	XMLEventWriter writer = xof.createXMLEventWriter(new OutputStreamWriter(byteArrayOutputStream, "UTF-8")); // Perché con ISO-8859-1 non funziona?
         	XMLEventFactory eventFactory = XMLEventFactory.newInstance();
         	
-        	
-/*        	while (xer.hasNext()) {
-                XMLEvent event = xer.nextEvent();
-                
-                if (event.getEventType() == XMLEvent.START_ELEMENT && event.asStartElement().getName().getLocalPart().equals("option")) {
-//                	System.out.println("elemento: "+event.asStartElement().getName().getLocalPart());
-                    	// Lo sostituisco con un elemento answer
-                    	writer.add(eventFactory.createStartElement("", null, "answer"));
-                        
-                    	 Itero sugli attributi dell'option. Se sono "code" ne prendo il valore e li aggiungo come
-                    	 * attributi dell'elemento answer che ho creato	 
-                    	Iterator ite = event.asStartElement().getAttributes();
-                    	while (ite.hasNext()) {
-                    		Attribute attr = (Attribute) ite.next();
-                    		if (attr.getName().getLocalPart().equals("code")) {
-                    			String optionCodeValue = attr.getValue();
-                    			writer.add(eventFactory.createAttribute("code", optionCodeValue));
-                    		} // Cosa succede se il prossimo attributo non è un code?
-                    	}
-                        event = xer.nextEvent();
-                }
-                writer.add(event);
-            }*/
+        	XMLEvent whitespaceBeforeOptionStartElement=null;
         	
         	while (xer.hasNext()) {
                 XMLEvent event = xer.nextEvent();
                 
-                if (event.getEventType() == XMLEvent.START_ELEMENT && event.asStartElement().getName().getLocalPart().equals("option")) {
-                	// se è un elemento option, ne prendo gli attributi
+                // Se l'evento attuale è un whitespace e il suo prossimo evento è un option, lo associo alla variabile whitespaceBeforeOptionStartElement
+                if (event.getEventType() == XMLEvent.CHARACTERS && event.asCharacters().isWhiteSpace() && 
+                	xer.peek().getEventType() == XMLEvent.START_ELEMENT && xer.peek().asStartElement().getName().getLocalPart().equals("option")) {
+                	
+                	whitespaceBeforeOptionStartElement = event;
+                
+                // Invece se l'evento attuale è un option, lo associo alla variabile optionStartElementEvent	
+                } else if (event.getEventType() == XMLEvent.START_ELEMENT && event.asStartElement().getName().getLocalPart().equals("option")) {
 
-
-                    /* Itero sugli attributi dell'option. Se sono "code" ne prendo il valore e li aggiungo come
-                	 * attributi dell'elemento answer che ho creato	 */
-                	Iterator ite = event.asStartElement().getAttributes();
-
-                    // finché ci sono attributi, li controllo. Se si chiamano "code" e il loro valore è nella lista, ne prendo il valore.
-                    // e scrivo l'elemento
-                    //answer con il loro valore
-
-                	while (ite.hasNext()) {
-                		Attribute attr = (Attribute) ite.next();
-                		if (attr.getName().getLocalPart().equals("code") && questionAnswers.containsValue(attr.getValue())) {
-                			String optionCodeValue = attr.getValue();
-                            writer.add(eventFactory.createStartElement("", null, "answer"));
-                			writer.add(eventFactory.createAttribute("code", optionCodeValue));
-                		} // Cosa succede se il prossimo attributo non è un code?
+                	StartElement optionStartElementEvent = event.asStartElement();
+                	
+                	/*
+                    In general there can  be some other attribute before code attribute.
+                    canConvertOptionToAnswer() returns true if "code" attribute value is contained in  "questionAnswers" map
+                    If there is a match do conversion of <option> to <answer> else skip <option> until </option>
+                     */
+                	
+                	if (canConvertOptionToAnswer(optionStartElementEvent, questionAnswers)) {
+                		convertOptionToAnswer(whitespaceBeforeOptionStartElement, optionStartElementEvent, xer, writer, eventFactory);
+                	} else {
+                		skipOption(xer);
                 	}
-                    event = xer.nextEvent();
-                }
+                	whitespaceBeforeOptionStartElement=null;
+                } else {
                 writer.add(event);
+                }
             }
         	writer.close();
         	
@@ -140,28 +114,61 @@ public class SubmittedPollGenerator {
         String result = byteArrayOutputStream.toString();
         System.out.println(result);
 		return result;
+	}
+
+
+	private static void skipOption(XMLEventReader xer) throws XMLStreamException {
+		/* Finché non arriva a </option>, l'XMLEventReader skippa gli eventi, non inviandoli al writer.
+		 * Dà per scontato che l'evento precedente dell' XMLEventReader xer fosse START_ELEMENT <option> */
+		XMLEvent eventWithinOptionElement;
+		do {
+	      eventWithinOptionElement = xer.nextEvent();
+	    }
+	    while (!(eventWithinOptionElement.getEventType() == XMLEvent.END_ELEMENT && eventWithinOptionElement.asEndElement().getName().getLocalPart().equals("option")));
+	}
+
+
+
+	private static boolean canConvertOptionToAnswer(StartElement optionStartElementEvent,	Map<String, String> questionAnswers) {
+		Iterator ite = optionStartElementEvent.getAttributes();
+		
+		while (ite.hasNext()) {
+    		Attribute attr = (Attribute) ite.next();
+    		if (attr.getName().getLocalPart().equals("code") && questionAnswers.containsValue(attr.getValue())) {
+    			return true;
+    		}
+    	}
+		return false;
 	}	
 	
-	/*
-	 * XMLInputFactory inFactory = XMLInputFactory.newInstance();
-    XMLEventReader eventReader = inFactory.createXMLEventReader(new FileInputStream("1.xml"));
-    XMLOutputFactory factory = XMLOutputFactory.newInstance();
-    XMLEventWriter writer = factory.createXMLEventWriter(new FileWriter(file));
-    XMLEventFactory eventFactory = XMLEventFactory.newInstance();
-    while (eventReader.hasNext()) {
-        XMLEvent event = eventReader.nextEvent();
-        writer.add(event);
-        if (event.getEventType() == XMLEvent.START_ELEMENT) {
-            if (event.asStartElement().getName().toString().equalsIgnoreCase("book")) {
-                writer.add(eventFactory.createStartElement("", null, "index"));
-                writer.add(eventFactory.createEndElement("", null, "index"));
-            }
-        }
-    }
-    writer.close(); */
-	
-	
-	
+
+	private static void convertOptionToAnswer(XMLEvent whitespaceBeforeOptionStartElement, StartElement optionStartElementEvent, XMLEventReader xer, XMLEventWriter writer, XMLEventFactory eventFactory) throws XMLStreamException {
+
+		if (whitespaceBeforeOptionStartElement != null) {
+			writer.add(whitespaceBeforeOptionStartElement);
+		}
+		
+		writer.add(eventFactory.createStartElement("", null, "answer"));
+		
+		/*
+	    copy attributes. Note that getAttributes() may not return attributes in the same order as they appear in xml document
+	    because according to XML spec order of attributes is not important.
+	     */
+	    Iterator ite = optionStartElementEvent.getAttributes();
+	    while(ite.hasNext())
+	    {
+	      Attribute attribute = (Attribute) ite.next();
+	      writer.add(attribute);
+	    }
+	    
+	    //copia tutto quello che compare fino all'elemento </option>:
+	    XMLEvent eventWithinOptionElement = xer.nextEvent();
+	    while (!(eventWithinOptionElement.getEventType() == XMLEvent.END_ELEMENT && eventWithinOptionElement.asEndElement().getName().getLocalPart().equals("option"))) {
+	    	writer.add(eventWithinOptionElement);
+	        eventWithinOptionElement = xer.nextEvent();
+	    }
+	    writer.add(eventFactory.createEndElement("", null, "answer"));	    
+	}	
 	
 	
 	
