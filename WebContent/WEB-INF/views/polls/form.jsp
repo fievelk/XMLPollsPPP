@@ -6,8 +6,7 @@
   function validateSubmit(submit) {
 
     if (validateRadios() && validateCheckboxes()) {
-    alert('Validazione completata con successo');  
-      return false; //cambiare
+      return true;
     }
     alert('Non hai risposto a uno o più quesiti obbligatori');
     return false;

@@ -6,8 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
@@ -19,17 +17,20 @@ import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
 
 public class SubmittedPollGenerator {
 	
-	private static Map<String,String> fromStringToMap(String inputString) {
+	private static ListMultimap<String, String> fromStringToMap(String inputString) {
 
-		Map<String, String> map = new LinkedHashMap<String, String>();
+//		Map<String, String> map = new LinkedHashMap<String, String>();
+		ListMultimap<String, String> map = ArrayListMultimap.create();
 		String[] keyValues = inputString.split("&");
 		for (String keyValue : keyValues) {
 			String[] pairs = keyValue.split("=");
 			map.put(pairs[0], pairs.length == 1 ? "" : pairs[1]);
-//			System.out.println(pairs[0] + "-> " + pairs[1]);
 		}
 		return map;
 	}
@@ -38,7 +39,8 @@ public class SubmittedPollGenerator {
 	
 	/* Questo metodo prende l'xml dello skeleton e lo trasforma in un xml di submission con le risposte */
 	public static String generateSubmissionPoll(String pollSkeleton, String pollResults) {
-		Map<String,String> questionAnswers = fromStringToMap(pollResults);
+//		Map<String,String> questionAnswers = fromStringToMap(pollResults);
+		ListMultimap<String,String> questionAnswers = fromStringToMap(pollResults);
 		
         XMLInputFactory xif = XMLInputFactory.newInstance();
         
@@ -85,7 +87,6 @@ public class SubmittedPollGenerator {
                     canConvertOptionToAnswer() returns true if "code" attribute value is contained in  "questionAnswers" map
                     If there is a match do conversion of <option> to <answer> else skip <option> until </option>
                      */
-                	
                 	if (canConvertOptionToAnswer(optionStartElementEvent, questionAnswers)) {
                 		convertOptionToAnswer(whitespaceBeforeOptionStartElement, optionStartElementEvent, xer, writer, eventFactory);
                 	} else {
@@ -129,14 +130,11 @@ public class SubmittedPollGenerator {
 
 
 
-	private static boolean canConvertOptionToAnswer(StartElement optionStartElementEvent, Map<String, String> questionAnswers) {
+	private static boolean canConvertOptionToAnswer(StartElement optionStartElementEvent, ListMultimap<String, String> questionAnswers) {
 		Iterator ite = optionStartElementEvent.getAttributes();
-//		System.out.println(optionStartElementEvent.toString());
 		while (ite.hasNext()) {
     		Attribute attr = (Attribute) ite.next();
-    		System.out.println(attr.getName().getLocalPart()+": "+attr.getValue()); // Errore: mi restituisce due volte "code: T4Q3_2"
     		if (attr.getName().getLocalPart().equals("code") && questionAnswers.containsValue(attr.getValue())) {
-    			System.out.println(attr.getName().getLocalPart()+": "+attr.getValue());
     			return true;
     		}
     	}
@@ -171,49 +169,4 @@ public class SubmittedPollGenerator {
 	    }
 	    writer.add(eventFactory.createEndElement("", null, "answer"));	    
 	}	
-	
-	
-	
-	
-/*    public static void StAXParseDocument(File f) {
-        XMLInputFactory xif = XMLInputFactory.newInstance();
-        XMLStreamReader xsr = null;
-        FileReader fr = null;
-        try {
-            fr = new FileReader(f);
-            xsr = xif.createXMLStreamReader(fr);
-            System.out.println("ENCODING: "+xsr.getCharacterEncodingScheme());
-            while (xsr.hasNext()) {
-                int next = xsr.next();
-                if (xsr.isWhiteSpace()) {
-                    continue;
-                }
-                switch (next) {
-				case XMLStreamReader.START_ELEMENT:	
-					System.out.println("STARTELEMENT "+xsr.getLocalName());
-                }
-            }
-        } catch (FileNotFoundException ex) {
-        } catch (XMLStreamException ex) {
-            System.out.println("Errore ["
-                    + ex.getLocation().getSystemId() + ":"
-                    + ex.getLocation().getLineNumber() + ","
-                    + ex.getLocation().getColumnNumber() + "] "
-                    + ex.getMessage());
-        } finally {
-            try {
-                if (xsr != null) {
-                    xsr.close();
-                }
-                if (fr != null) {
-                    fr.close();
-                }
-            } catch (XMLStreamException ex) {
-                //
-            } catch (IOException ex) {
-                //
-            }
-        }
-    }	*/
-	
 }
