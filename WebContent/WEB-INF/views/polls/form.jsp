@@ -3,68 +3,78 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
 <script type="text/javascript">
-	function validateSubmit(submit) {
+  function validateSubmit(submit) {
 
-		var radios = document.getElementsByClassName("requiredRadio");
+    if (validateRadios() && validateCheckboxes()) {
+    alert('Validazione completata con successo');  
+      return false; //cambiare
+    }
+    alert('Non hai risposto a uno o più quesiti obbligatori');
+    return false;
+  }
 
-		if (validateRadio(radios)) {
 
-			if (validateCheckboxes()) {
-				return true;
-			} else {
-				alert('Non hai risposto a uno o più quesiti obbligatori');
-				return false;
-			}
-		} else {
-			alert('Non hai risposto a uno o più quesiti obbligatori');
-			return false;
-		}
-	}
+  function validateRadios() {
+    var allInputs = document.getElementsByTagName('input');
+    var last = "NameUnlikelyToBeUsedAsAnElementName";
 
-	function validateRadio(inputs) {
-
-		// 	  alert("validateRadios");
-
-		for (i = 0; i < inputs.length; i++) {
-
-			if (inputs[i].checked) {
-				//     	  alert("validateRadios inputchecked");
-				return true;
-			}
-		}
-		return false;
-	}
-
-	function validateCheckboxes() {
-		// 	  alert("validateCheckboxes");
-		var inputs = document.getElementsByTagName('input');
-		var checkboxes = [];
-
-		// prendo tutte le checkbox 
-		for (i = 0; i < inputs.length; i++) {
-			if (inputs[i].type.toLowerCase() == 'checkbox') {
-				checkboxes.push(inputs[i]);
-				//         alert("sono qui");
-			}
-		}
-		//     alert("validateCheckboxes dopo il push");
-		if (checkboxes.length < 1) {
-			return true;
-		}
-
-		// prendo tutti gli elementi che hanno il classname della checkbox (ossia tutte le checkbox collegate tra loro) 
-		for (i = 0; i < checkboxes.length; i++) {
-			checkboxClassName = checkboxes[i].className;
-			linkedCheckboxes = document
-					.getElementsByClassName(checkboxClassName);
-			for (i = 0; i < linkedCheckboxes.length; i++) {
-				if (linkedCheckboxes[i].checked) {
-					return true;
-					//         } else {
-					//           return false; SBAGLIATO: Se lo decommentassi otterrei l'alert ogni volta che non venisse selezionata la prima checkbox. 
+    for (i = 0; i < allInputs.length; i++) {
+    	var input = allInputs[i];
+    	if (input.name == last) continue;
+    	
+    	else if (input.type == "radio" && input.className.substring(0,13)=="requiredRadio") {
+    		last = input.name;
+    		var radios = document.getElementsByName(input.name);
+			var radioSelected = false;
+			
+			// Itero sui radios 
+			for (j = 0; j < radios.length; j++) {
+				if (radios[j].checked) {
+					radioSelected = true;
+					break; // Se trova il radio checked, rompe l'iterazione e va al prossimo gruppo di radios (primo for)
 				}
 			}
-		}
+			// Se alla fine del for precedente non ho trovato alcun radio checked
+			if (!radioSelected) { // nessuna opzione selezionata
+// 				alert("Non hai risposto alla domanda obbligatoria "+ input.name);
+				input.focus();
+				return false;
+			}
+    	}
+    }
+    return true;
+  }
+  
+
+	function validateCheckboxes() {
+	    var allInputs = document.getElementsByTagName('input');
+	    var last = "NameUnlikelyToBeUsedAsAnElementName";
+
+	    for (i = 0; i < allInputs.length; i++) {
+	    	var input = allInputs[i];
+	    	if (input.name == last) continue;
+	    	
+	    	else if (input.type == "checkbox" && input.className.substring(0,16)=="requiredCheckbox") {
+	    		last = input.name;
+	    		var checkboxes = document.getElementsByName(input.name);
+				var checkboxSelected = false;
+				
+				// Itero sui checkbox 
+				for (j = 0; j < checkboxes.length; j++) {
+					if (checkboxes[j].checked) {
+						checkboxSelected = true;
+						break; // Se trova il checkbox checked, rompe l'iterazione e va al prossimo gruppo di checkboxes (primo for)
+					}
+				}
+				// Se alla fine del for precedente non ho trovato alcun checkbox checked
+				if (!checkboxSelected) { // nessuna opzione selezionata
+// 					alert("Non hai risposto alla domanda obbligatoria "+ input.name);
+					input.focus();
+					return false;
+				}
+	    	}
+	    }
+		return true;
 	}
 </script>
 

@@ -129,7 +129,7 @@ public class SubmittedPollGenerator {
 
 
 
-	private static boolean canConvertOptionToAnswer(StartElement optionStartElementEvent,	Map<String, String> questionAnswers) {
+	private static boolean canConvertOptionToAnswer(StartElement optionStartElementEvent, Map<String, String> questionAnswers) {
 		Iterator ite = optionStartElementEvent.getAttributes();
 //		System.out.println(optionStartElementEvent.toString());
 		while (ite.hasNext()) {
