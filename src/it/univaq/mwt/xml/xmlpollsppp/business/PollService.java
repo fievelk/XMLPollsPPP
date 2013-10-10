@@ -16,6 +16,7 @@ public interface PollService {
 	TreeMap<String, String> getAllPollsCodeAndTitle() throws RepositoryError;
 
 	String getPollsXSLT() throws RepositoryError;
-	
+
+	String createSubmittedPoll(String submittedPoll) throws RepositoryError;
 	
 }

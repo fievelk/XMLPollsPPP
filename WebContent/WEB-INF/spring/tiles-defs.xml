@@ -14,15 +14,16 @@
         <put-attribute name="body" value="/WEB-INF/views/common/index.jsp"/>
     </definition>
     
-<!-- 	<definition name="empty" template="/WEB-INF/views/layout/empty.jsp">
-    </definition> -->
-    
     <definition name="poll.form" extends="standard">
         <put-attribute name="body" value="/WEB-INF/views/polls/form.jsp"/>
     </definition>    
 
     <definition name="poll.result" extends="standard">
         <put-attribute name="body" value="/WEB-INF/views/polls/result.jsp"/>
+    </definition>    
+    
+    <definition name="poll.stats" extends="standard">
+        <put-attribute name="body" value="/WEB-INF/views/polls/stats.jsp"/>
     </definition>    
 
 </tiles-definitions>

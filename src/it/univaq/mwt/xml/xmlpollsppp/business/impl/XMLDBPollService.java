@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.exist.xmldb.EXistResource;
 import org.springframework.stereotype.Service;
 import org.xmldb.api.DatabaseManager;
 import org.xmldb.api.base.Collection;
@@ -31,8 +32,6 @@ public class XMLDBPollService implements PollService {
 	Map<String, String> namespaces;
 	Map<String, String> namespacesXslt;
 	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
-//	private static final String exist_uri_polls = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/polls";
-//	private static final String exist_uri_xslt = "xmldb:exist://localhost:8085/exist/xmlrpc/db/xmlpollsppp/xslt";
 	public static final String exist_uri = "xmldb:exist://localhost:8085/exist/xmlrpc/db";
 	
 	private Collection dbRepository;
@@ -202,6 +201,45 @@ public class XMLDBPollService implements PollService {
 		}
             
 		return xslt;
+	}
+
+
+	@Override
+	public String createSubmittedPoll(String submittedPoll) throws RepositoryError {
+
+        Collection col = null;
+        XMLResource res = null;
+        try { 
+            col = dbSubmittedPolls;
+            
+            // create new XMLResource; an id will be assigned to the new resource
+            String seqId = col.createId();
+            res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
+//            File f = new File(args[1]);
+//            if(!f.canRead()) {
+//                System.out.println("cannot read file!");
+//                return;
+//            }
+            
+            res.setContent(submittedPoll);
+            System.out.print("storing document " + res.getId() + "...");
+            col.storeResource(res);
+            System.out.println("ok.");
+        } catch (XMLDBException e) {
+			e.printStackTrace();
+		} finally {
+            // Libera le risorse
+            if(res != null) {
+                try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
+            }
+            
+            if(col != null) {
+                try { col.close(); } catch(XMLDBException xe) {xe.printStackTrace();}
+            }
+        }
+		
+		
+		return null;
 	}	    
     
 }

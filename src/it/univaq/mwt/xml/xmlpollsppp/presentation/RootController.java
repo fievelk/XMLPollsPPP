@@ -1,6 +1,7 @@
 package it.univaq.mwt.xml.xmlpollsppp.presentation;
 
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
+import it.univaq.mwt.xml.xmlpollsppp.business.SVGGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.SubmittedPollGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
@@ -43,9 +44,20 @@ public class RootController {
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
 //		System.out.println(pollResults);
+		service.createSubmittedPoll(submittedPoll);
 		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
 		
 		return "poll.result";
+	}	
+	
+	@RequestMapping(value="/polls/{skeletonId}/stats.do")
+	public String pollStats(@PathVariable("skeletonId") String skeletonId, Model model) throws RepositoryError {
+
+//		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
+		String svgCode = SVGGenerator.generateSVG();
+		System.out.println(svgCode);
+		model.addAttribute("svgCode", svgCode);
+		return "poll.stats";
 	}	
 
 }

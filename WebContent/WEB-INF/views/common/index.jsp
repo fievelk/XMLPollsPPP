@@ -13,6 +13,12 @@
 		      	<span class="badge">${codeTitle.key}</span> <a href="${pageContext.request.contextPath}/polls/${codeTitle.key}">${codeTitle.value}</a><br/>
 		      	</c:forEach>
 		      </p>
+	    	<h2 class="text-info">Statistiche dei sondaggi:</h2>
+		      <p>
+				<c:forEach items="${codeTitles}" var="codeTitle">
+		      	<span class="badge">${codeTitle.key}</span> <a href="${pageContext.request.contextPath}/polls/${codeTitle.key}/stats.do">${codeTitle.value}</a><br/>
+		      	</c:forEach>
+		      </p>
 		 </div>
 	</div>
 	</div>

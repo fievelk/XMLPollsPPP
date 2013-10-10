@@ -48,14 +48,15 @@ public class SubmittedPollGenerator {
          * altrimenti l'XMLStreamReader reagirà al documento come se fosse UTF-8 (per default).
          * Non c'è modo per cambiare questo comportamento tramite metodi o set di parametri */
         
-        pollSkeleton = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"+pollSkeleton;
+//        pollSkeleton = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>"+pollSkeleton;
+        pollSkeleton = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"+pollSkeleton;
         XMLEventReader xer = null;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         
         try {
         	// Creo uno Stream che contenga il documento XML da leggere
             // converto la String in un InputStream
-        	InputStream inputStream = new ByteArrayInputStream(pollSkeleton.getBytes("ISO-8859-1"));
+        	InputStream inputStream = new ByteArrayInputStream(pollSkeleton.getBytes("UTF-8"));
         	xer = xif.createXMLEventReader(inputStream);
         	
         	XMLOutputFactory xof = XMLOutputFactory.newInstance();
@@ -93,7 +94,13 @@ public class SubmittedPollGenerator {
                 		skipOption(xer);
                 	}
                 	whitespaceBeforeOptionStartElement=null;
-                } else {
+                	
+                } else if (event.getEventType() == XMLEvent.START_ELEMENT && event.asStartElement().getName().getLocalPart().equals("poll")) {
+                
+                	StartElement pollStartElementEvent = event.asStartElement();
+                	convertPollToSubmittedPoll(pollStartElementEvent, xer, writer, eventFactory);
+                }
+                else {
                 writer.add(event);
                 }
             }
@@ -169,4 +176,38 @@ public class SubmittedPollGenerator {
 	    }
 	    writer.add(eventFactory.createEndElement("", null, "answer"));	    
 	}	
+	
+	private static void convertPollToSubmittedPoll(StartElement pollStartElementEvent, XMLEventReader xer,	XMLEventWriter writer, XMLEventFactory eventFactory) throws XMLStreamException {
+		
+		writer.add(eventFactory.createStartElement("", null, "submittedPoll"));
+	
+		// Specifica i namespaces del documento xml submittedPoll 
+		writer.add(eventFactory.createAttribute("", "", "xmlns", "http://it.univaq.mwt.xml/submittedpoll"));
+		writer.add(eventFactory.createAttribute("xmlns", "http://it.univaq.mwt.xml/submittedpoll", "xsi", "http://www.w3.org/2001/XMLSchema-instance"));
+		writer.add(eventFactory.createAttribute("xsi", "http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://it.univaq.mwt.xml/submittedpoll submittedpoll.xsd"));
+		
+	    // E' in grado di sostituire automaticamente il tag di chiusura da /poll a /submittedPoll
+	}
+	
+	
+	
+/*	private static void convertPollToSubmittedPoll(StartElement pollStartElementEvent, XMLEventReader xer,	XMLEventWriter writer, XMLEventFactory eventFactory) throws XMLStreamException {
+		
+		writer.add(eventFactory.createStartElement("", null, "submittedPoll"));
+
+		Iterator ite = pollStartElementEvent.getAttributes();
+	    while(ite.hasNext())
+	    {
+	      Attribute attribute = (Attribute) ite.next();
+	      if (attribute.getName().getLocalPart().equals("schemaLocation")) {
+	    	  writer.add(eventFactory.createAttribute("", "", "xmlns", "http://it.univaq.mwt.xml/submittedpoll"));
+	    	  writer.add(eventFactory.createAttribute("xmlns", "http://it.univaq.mwt.xml/submittedpoll", "xsi", "http://www.w3.org/2001/XMLSchema-instance"));
+	    	  writer.add(eventFactory.createAttribute("xsi", "http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://it.univaq.mwt.xml/submittedpoll submittedpoll.xsd"));
+	      } else {
+	    	  writer.add(attribute);
+	    	  }
+	    }
+	    
+	    // E' in grado di sostituire automaticamente il tag di chiusura da /poll a /submittedPoll
+	}*/
 }
