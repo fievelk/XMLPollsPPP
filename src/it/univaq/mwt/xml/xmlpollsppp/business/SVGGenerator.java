@@ -32,7 +32,7 @@ public class SVGGenerator {
 
 		// Create the rectangle.
 		Element rectangle = doc.createElementNS(svgNS, "rect");
-		rectangle.setAttributeNS(null, "x", "10");
+		rectangle.setAttributeNS(null, "x", "350");
 		rectangle.setAttributeNS(null, "y", "20");
 		rectangle.setAttributeNS(null, "width", "100");
 		rectangle.setAttributeNS(null, "height", "50");
@@ -43,10 +43,10 @@ public class SVGGenerator {
 		
 		// Creo un cerchio
 		Element circle = doc.createElementNS(svgNS, "circle");
-			// Coordinate del centro e raggio
-		circle.setAttributeNS(null, "cx", "50");
-		circle.setAttributeNS(null, "cy", "50");
+		circle.setAttributeNS(null, "cx", "100");
+		circle.setAttributeNS(null, "cy", "100");
 		circle.setAttributeNS(null, "r", "100");
+		circle.setAttributeNS(null, "fill", "green");
 		
 		svgRoot.appendChild(circle);
 		
@@ -63,7 +63,10 @@ public class SVGGenerator {
 			e.printStackTrace();
 		}
         
-        String result = byteArrayOutputStream.toString();
+        // Rimuove la dichiarazione xml dall'output, per non farla comparire nella pagina html in cui il codice verrà incluso
+        String regexXmlDeclaration="<\\?xml(.*?)\\?>";
+        String result = byteArrayOutputStream.toString().replaceFirst(regexXmlDeclaration, "");
+
         return result;
 	}
 
