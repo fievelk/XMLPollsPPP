@@ -33,7 +33,7 @@ public class SVGGenerator {
 		Element svgRoot = doc.getDocumentElement();
 
 		// Set the width and height attributes on the root 'svg' element.
-		svgRoot.setAttributeNS(null, "width", "400");
+		svgRoot.setAttributeNS(null, "width", "650");
 		svgRoot.setAttributeNS(null, "height", "450");
 //		svgRoot.setAttributeNS(null, "xmlns", "http://www.w3.org/2000/svg");
 		
