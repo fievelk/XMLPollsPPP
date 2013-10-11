@@ -1,5 +1,6 @@
 package it.univaq.mwt.xml.xmlpollsppp.business.impl;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -109,7 +110,6 @@ public class XMLDBPollService implements PollService {
                     xpqs.setNamespace(entry.getKey(), entry.getValue());            	
                 }
             }    
-
             
             //eseguiamo la query e restituiamo i risultati
             ResourceSet result = xpqs.query(xpath);
@@ -227,13 +227,17 @@ public class XMLDBPollService implements PollService {
 	
 	
 	@Override
-	public TreeMap<String, String> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
+	public TreeMap<String, BigDecimal> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
 		
-		TreeMap<String, String> answersNumbers = new TreeMap<String, String>();
+		TreeMap<String, BigDecimal> answersNumbers = new TreeMap<String, BigDecimal>();
 		try {
 
 			// Prendo il testo di tutte le risposte della domanda (solo nel primo submittedPoll con quel codice). SBAGLIATO
-            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'][1]//p:answer[starts-with(@code,'"+questionCode+"')]/text()", dbSubmittedPolls);
+//            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'][1]//p:answer[starts-with(@code,'"+questionCode+"')]/text()", dbSubmittedPolls);
+            ResourceSet answersResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:option[starts-with(@code,'"+questionCode+"')]/@code", dbPollsSkeletons);
+//            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']", dbSubmittedPolls);
+//            ResourceSet answersResSet = queryDB("/p:submittedPoll", dbSubmittedPolls);
+//            System.out.println("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'][1]//p:answer[starts-with(@code,'"+questionCode+"')]/text()");
 //            String answerText = answersResSetText.getResource(0).getContent().toString();
             System.out.println("SIZE: "+answersResSet.getSize());
             // Per ogni risposta, conto nel db tutte le risposte uguali (con lo stesso testo)
@@ -245,8 +249,9 @@ public class XMLDBPollService implements PollService {
 	            ResourceIterator it = answersResSet.getIterator();
 	            while (it.hasMoreResources()) {
 	                //prelevo la singola answer e la converto in String
-	                String answer = it.nextResource().getContent().toString();
-	                System.out.println("ANSWER: "+answer);
+	                XMLResource answerCodeRes = (XMLResource) it.nextResource();
+	                String answerCode = answerCodeRes.getContent().toString(); //This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize it. An attribute always needs to be attached to an element when serialized
+	                System.out.println("ANSWER: "+answerCode);
 	                
 	                // Prelevo il titolo relativo al codice e lo converto in String
 //	                XMLResource titleRes = (XMLResource) xpqs.query("/p:poll/p:pollHead[p:code='" + code + "']/p:title/text()").getResource(0);
@@ -257,7 +262,7 @@ public class XMLDBPollService implements PollService {
 	                System.out.println("COUNT: "+count);
 	                
 	                // Aggiungo testo della risposta e numero di preferenze all'hashmap
-	                answersNumbers.put(answer, count);
+//	                answersNumbers.put(answer, count);
 	            }
 	        }
 		} catch (XMLDBException e) {

@@ -7,6 +7,7 @@ import it.univaq.mwt.xml.xmlpollsppp.business.SubmittedPollGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -58,7 +59,7 @@ public class RootController {
 
 //		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 //		String svgCode = SVGGenerator.generateSVG();
-		TreeMap<String,String> answersNumbers = service.getPollAnswersStats(1, "T1Q2");
+		TreeMap<String, BigDecimal> answersNumbers = service.getPollAnswersStats(1, "T1Q1");
 		GraphContainer graphContainer = SVGGenerator.generateSVG(); // Poi mi farò restituire una lista di GraphContainers
 //		String svgCode = graphContainer.getSVGcode();
 //		Map<String,String> legend = graphContainer.getLegendMap();

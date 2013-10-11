@@ -2,6 +2,7 @@ package it.univaq.mwt.xml.xmlpollsppp.business;
 
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -19,6 +20,6 @@ public interface PollService {
 
 	String createSubmittedPoll(String submittedPoll) throws RepositoryError;
 	
-	TreeMap<String, String> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError;
+	TreeMap<String, BigDecimal> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError;
 	
 }
