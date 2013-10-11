@@ -3,9 +3,11 @@ package it.univaq.mwt.xml.xmlpollsppp.business;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.HashSet;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.w3c.dom.DOMImplementation;
@@ -37,14 +39,96 @@ public class SVGGenerator {
 		svgRoot.setAttributeNS(null, "height", "450");
 //		svgRoot.setAttributeNS(null, "xmlns", "http://www.w3.org/2000/svg");
 		
-		// Creo un cerchio
-		Element circle = doc.createElementNS(svgNS, "circle");
-		circle.setAttributeNS(null, "cx", "100");
-		circle.setAttributeNS(null, "cy", "100");
-		circle.setAttributeNS(null, "r", "100");
-		circle.setAttributeNS(null, "fill", "green");
 		
+		// Creo un cerchio
+		Integer centerX = 100;
+		Integer centerY = 100;
+		Integer radius = 100;
+		Element circle = doc.createElementNS(svgNS, "circle");
+		circle.setAttributeNS(null, "cx", centerX.toString());
+		circle.setAttributeNS(null, "cy", centerY.toString());
+		circle.setAttributeNS(null, "r", radius.toString());
+		circle.setAttributeNS(null, "fill", "green");
 		svgRoot.appendChild(circle);
+
+		// Prendo i dati relativi a ogni domanda (quante persone hanno dato una determinata risposta)
+		
+		// Si usa Integer al posto di int perché i tipi primitivi non possono essere usati come generic arguments
+		Map<String, BigDecimal> answersNumbers = new LinkedHashMap<String, BigDecimal>();
+		// Questi valori vanno presi tramite query sul db, quindi qui avrò solo la map answerNumbers
+		answersNumbers.put("T1Q1_1", BigDecimal.valueOf(113));
+		answersNumbers.put("T1Q1_2", BigDecimal.valueOf(100));
+		answersNumbers.put("T1Q1_3", BigDecimal.valueOf(50));
+		answersNumbers.put("T1Q1_4", BigDecimal.valueOf(28));
+		answersNumbers.put("T1Q1_5", BigDecimal.valueOf(27));
+		
+		// Uso dei BigDecimal: https://blogs.oracle.com/CoreJavaTechTips/entry/the_need_for_bigdecimal
+		
+		// Ottengo la somma dei valori totali delle risposte (numero di opzioni selezionate da ognuno)
+		BigDecimal answersValuesSum = new BigDecimal("0");
+		Iterator answersValuesIte = answersNumbers.values().iterator();
+		while (answersValuesIte.hasNext()) {
+			answersValuesSum = answersValuesSum.add((BigDecimal)answersValuesIte.next());
+		}
+		System.out.println("answersValuesSum = "+answersValuesSum);
+		
+		// Ora devo trasformare questi valori in angoli rispetto ai 360 gradi del cerchio.
+		BigDecimal roundAngle = new BigDecimal("360");
+		for (String key : answersNumbers.keySet()){
+			BigDecimal oldValue = answersNumbers.get(key);
+			System.out.print("Old value = "+oldValue);
+			BigDecimal newValue = (oldValue.multiply(roundAngle)).divide(answersValuesSum, 1, RoundingMode.HALF_UP);
+			System.out.print(" --> ");
+			System.out.println("New value = "+newValue);
+			answersNumbers.put(key, newValue);
+		}
+
+		// Converto ogni angolo in radiante creando una nuova LinkedHashMap su misura
+		// (Copiando le key della map answersNumbers)
+		Element path = doc.createElementNS(svgNS, "path");
+		Map<String, BigDecimal> answersNumbersRadiants = new LinkedHashMap<String, BigDecimal>();
+		BigDecimal greekPI = new BigDecimal(Math.PI);
+		BigDecimal flatAngle = new BigDecimal("180");
+		
+		BigDecimal startAngleRadiantValue = new BigDecimal("0");
+		BigDecimal endAngleRadiantValue = new BigDecimal("0");
+		
+		for (String key : answersNumbers.keySet()){
+			BigDecimal oldValue = answersNumbers.get(key);
+			BigDecimal thisAngleRadiantValue = (greekPI.multiply(oldValue)).divide(flatAngle, 1, RoundingMode.HALF_UP); // Trigonometria
+			answersNumbersRadiants.put(key, thisAngleRadiantValue);
+			
+			startAngleRadiantValue = endAngleRadiantValue;
+			endAngleRadiantValue = startAngleRadiantValue.add(thisAngleRadiantValue);
+		// Calcolo i punti x e y da incontrare sulla circonferenza per tracciare l'arco relativo all'angolo
+			
+		// Coordinate del punti di partenza dell'arco sulla circonferenza	
+		double x1 = centerX + radius*Math.cos(startAngleRadiantValue.doubleValue());
+		double y1 = centerY + radius*Math.sin(startAngleRadiantValue.doubleValue());
+		
+		// Coordinate del punti di fine dell'arco sulla circonferenza
+		double x2 = centerX + radius*Math.cos(endAngleRadiantValue.doubleValue());
+		double y2 = centerY + radius*Math.sin(endAngleRadiantValue.doubleValue());
+		
+		
+		System.out.println("x = "+ x1 + " y = " + y1);
+		
+		path = doc.createElementNS(svgNS, "path");
+		String pathString = "M"+centerX+","+centerY + " L"+x1+","+y1 + " A100,100 0 0,1 " + x2+","+y2+ " z";
+		path.setAttributeNS(null, "d", pathString);
+		svgRoot.appendChild(path);
+		
+		
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         
