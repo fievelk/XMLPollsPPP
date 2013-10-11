@@ -19,4 +19,6 @@ public interface PollService {
 
 	String createSubmittedPoll(String submittedPoll) throws RepositoryError;
 	
+	TreeMap<String, String> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError;
+	
 }

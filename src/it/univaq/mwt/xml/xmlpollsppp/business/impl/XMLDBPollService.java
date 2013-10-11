@@ -29,7 +29,9 @@ public class XMLDBPollService implements PollService {
 //	private DataSource dataSource;
 	
 	private final static String poll_ns = "http://it.univaq.mwt.xml/poll";
+	private final static String submittedPoll_ns = "http://it.univaq.mwt.xml/submittedpoll";
 	Map<String, String> namespaces;
+	Map<String, String> namespacesSubmittedPolls;
 	Map<String, String> namespacesXslt;
 	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
 	public static final String exist_uri = "xmldb:exist://localhost:8085/exist/xmlrpc/db";
@@ -44,6 +46,9 @@ public class XMLDBPollService implements PollService {
 		try {
 			namespaces = new HashMap();
 			namespaces.put("p", poll_ns);
+			
+			namespacesSubmittedPolls = new HashMap();
+			namespacesSubmittedPolls.put("p", submittedPoll_ns);
 			
 			namespacesXslt = new HashMap();
 			namespacesXslt.put("xsl", "http://www.w3.org/1999/XSL/Transform");
@@ -94,6 +99,10 @@ public class XMLDBPollService implements PollService {
             if (coll.getName().equals(dbXSLT.getName())){
             	for (Entry<String, String> entry : namespacesXslt.entrySet()) {
                     xpqs.setNamespace(entry.getKey(), entry.getValue());
+                }
+            } else if (coll.getName().equals(dbSubmittedPolls.getName())){
+            	for (Entry<String, String> entry : namespacesSubmittedPolls.entrySet()) {
+            		xpqs.setNamespace(entry.getKey(), entry.getValue());
                 }
             } else {
                 for (Entry<String, String> entry : namespaces.entrySet()) {
@@ -179,31 +188,10 @@ public class XMLDBPollService implements PollService {
 		} catch (XMLDBException e) {
 			e.printStackTrace();
 		}
-//		System.out.println("CODETITLE "+codeTitle);
-		
 		return codeTitle;
 	}	    
     
-    // XSLT QUERIES
-
-    @Override
-	public String getPollsXSLT() throws RepositoryError {
-		
-		String xslt = null;
-        
-		try {
-			//prelevo il singolo xslt e lo converto in Stringa
-			ResourceSet xsltResourceSet = queryDB("/xsl:stylesheet", dbXSLT);
-			xslt = xsltResourceSet.getResource(0).getContent().toString(); // Al momento c'è un solo XSLT, poi andrà modificato
-//			System.out.println(xslt);
-		} catch (XMLDBException e) {
-			e.printStackTrace();
-		}
-            
-		return xslt;
-	}
-
-
+	
 	@Override
 	public String createSubmittedPoll(String submittedPoll) throws RepositoryError {
 
@@ -215,11 +203,6 @@ public class XMLDBPollService implements PollService {
             // create new XMLResource; an id will be assigned to the new resource
             String seqId = col.createId();
             res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
-//            File f = new File(args[1]);
-//            if(!f.canRead()) {
-//                System.out.println("cannot read file!");
-//                return;
-//            }
             
             res.setContent(submittedPoll);
             System.out.print("storing document " + res.getId() + "...");
@@ -240,6 +223,64 @@ public class XMLDBPollService implements PollService {
 		
 		
 		return null;
-	}	    
+	}
+	
+	
+	@Override
+	public TreeMap<String, String> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
+		
+		TreeMap<String, String> answersNumbers = new TreeMap<String, String>();
+		try {
+
+			// Prendo il testo di tutte le risposte della domanda (solo nel primo submittedPoll con quel codice). SBAGLIATO
+            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'][1]//p:answer[starts-with(@code,'"+questionCode+"')]/text()", dbSubmittedPolls);
+//            String answerText = answersResSetText.getResource(0).getContent().toString();
+            System.out.println("SIZE: "+answersResSet.getSize());
+            // Per ogni risposta, conto nel db tutte le risposte uguali (con lo stesso testo)
+            
+//            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+questionCode+"')]/text()", dbSubmittedPolls);
+            
+			if (answersResSet.getSize() > 0) {
+				System.out.println("dentro l'if");
+	            ResourceIterator it = answersResSet.getIterator();
+	            while (it.hasMoreResources()) {
+	                //prelevo la singola answer e la converto in String
+	                String answer = it.nextResource().getContent().toString();
+	                System.out.println("ANSWER: "+answer);
+	                
+	                // Prelevo il titolo relativo al codice e lo converto in String
+//	                XMLResource titleRes = (XMLResource) xpqs.query("/p:poll/p:pollHead[p:code='" + code + "']/p:title/text()").getResource(0);
+	                ResourceSet countResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+questionCode+"')])", dbSubmittedPolls);
+	                XMLResource countRes = (XMLResource) countResSet.getResource(0);
+	                
+	                String count = countRes.getContent().toString();
+	                System.out.println("COUNT: "+count);
+	                
+	                // Aggiungo testo della risposta e numero di preferenze all'hashmap
+	                answersNumbers.put(answer, count);
+	            }
+	        }
+		} catch (XMLDBException e) {
+			e.printStackTrace();
+		}
+		System.out.println("ANSWERSNUMBERS: "+answersNumbers);
+		return answersNumbers;
+	}
+	
+	
+    // XSLT QUERIES
+
+    @Override
+	public String getPollsXSLT() throws RepositoryError {
+		String xslt = null;
+		try {
+			//prelevo il singolo xslt e lo converto in Stringa
+			ResourceSet xsltResourceSet = queryDB("/xsl:stylesheet", dbXSLT);
+			xslt = xsltResourceSet.getResource(0).getContent().toString(); // Al momento c'è un solo XSLT, poi andrà modificato
+		} catch (XMLDBException e) {
+			e.printStackTrace();
+		}
+		return xslt;
+	}
     
 }

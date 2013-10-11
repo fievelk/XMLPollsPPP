@@ -1,5 +1,6 @@
 package it.univaq.mwt.xml.xmlpollsppp.business;
 
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -8,6 +9,7 @@ import java.math.RoundingMode;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.w3c.dom.DOMImplementation;
@@ -19,7 +21,10 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
 public class SVGGenerator {
 	
-	public static String generateSVG() {
+	public static GraphContainer generateSVG() {
+		
+		// Genero una Map per inserire le chiavi (non solo codici risposta) e i rispettivi colori
+		Map<String, String> legendMap = new LinkedHashMap<String, String>();
 		
 		// by choosing the namespace URI and the local name of the root element of SVG, we are creating an SVG document. //
 		
@@ -27,18 +32,14 @@ public class SVGGenerator {
 		// but we could have used "http://www.w3.org/2000/svg".
 		String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 		DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
-		
-		
 		Document doc = impl.createDocument(svgNS, "svg", null);
 		
-		// Get the root element (the 'svg' element).
+		// Prendo il root element ('svg' element).
 		Element svgRoot = doc.getDocumentElement();
 
-		// Set the width and height attributes on the root 'svg' element.
+		// Imposto width e height sull elemento svg.
 		svgRoot.setAttributeNS(null, "width", "650");
 		svgRoot.setAttributeNS(null, "height", "450");
-//		svgRoot.setAttributeNS(null, "xmlns", "http://www.w3.org/2000/svg");
-		
 		
 		// Creo un cerchio
 		Integer centerX = 100;
@@ -48,13 +49,14 @@ public class SVGGenerator {
 		circle.setAttributeNS(null, "cx", centerX.toString());
 		circle.setAttributeNS(null, "cy", centerY.toString());
 		circle.setAttributeNS(null, "r", radius.toString());
-		circle.setAttributeNS(null, "fill", "green");
+		circle.setAttributeNS(null, "fill", "white");
 		svgRoot.appendChild(circle);
 
 		// Prendo i dati relativi a ogni domanda (quante persone hanno dato una determinata risposta)
 		
 		// Si usa Integer al posto di int perché i tipi primitivi non possono essere usati come generic arguments
 		Map<String, BigDecimal> answersNumbers = new LinkedHashMap<String, BigDecimal>();
+		
 		// Questi valori vanno presi tramite query sul db, quindi qui avrò solo la map answerNumbers
 		answersNumbers.put("T1Q1_1", BigDecimal.valueOf(113));
 		answersNumbers.put("T1Q1_2", BigDecimal.valueOf(100));
@@ -110,24 +112,27 @@ public class SVGGenerator {
 		double x2 = centerX + radius*Math.cos(endAngleRadiantValue.doubleValue());
 		double y2 = centerY + radius*Math.sin(endAngleRadiantValue.doubleValue());
 		
+		// Genero un colore random
+		Random rand = new Random();
+		Color randomColor = new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
+		int r = randomColor.getRed();
+		int g = randomColor.getGreen();
+		int b = randomColor.getBlue();
 		
-		System.out.println("x = "+ x1 + " y = " + y1);
+		String rgbColor = "rgb("+r+","+g+","+b+")";
+		
+		System.out.println("COLOR = " + randomColor);
 		
 		path = doc.createElementNS(svgNS, "path");
 		String pathString = "M"+centerX+","+centerY + " L"+x1+","+y1 + " A100,100 0 0,1 " + x2+","+y2+ " z";
 		path.setAttributeNS(null, "d", pathString);
+		path.setAttributeNS(null, "fill", rgbColor);
 		svgRoot.appendChild(path);
 		
+		// Inserisco la chiave dello spicchio e il suo colore nella legendMap
+		legendMap.put(key, rgbColor);
 		
 		}
-		
-		
-		
-		
-		
-		
-		
-		
 		
 		
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -135,19 +140,18 @@ public class SVGGenerator {
         try {
         	OutputFormat format = new OutputFormat(doc);
             format.setIndenting(true);
-//            XMLSerializer serializer = new XMLSerializer(System.out, format);
         	XMLSerializer serializer = new XMLSerializer(new OutputStreamWriter(byteArrayOutputStream, "UTF-8"), format);
 			serializer.serialize(doc);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
         // Rimuove la dichiarazione xml dall'output, per non farla comparire nella pagina html in cui il codice verrà incluso
         String regexXmlDeclaration="<\\?xml(.*?)\\?>";
         String result = byteArrayOutputStream.toString().replaceFirst(regexXmlDeclaration, "");
-
-        return result;
+        
+        GraphContainer graphContainer = new GraphContainer(result, legendMap);
+        return graphContainer;
 	}
 
 }

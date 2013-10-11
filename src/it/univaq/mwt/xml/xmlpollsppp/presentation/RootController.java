@@ -1,11 +1,14 @@
 package it.univaq.mwt.xml.xmlpollsppp.presentation;
 
+import it.univaq.mwt.xml.xmlpollsppp.business.GraphContainer;
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.SVGGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.SubmittedPollGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,9 +57,17 @@ public class RootController {
 	public String pollStats(@PathVariable("skeletonId") String skeletonId, Model model) throws RepositoryError {
 
 //		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
-		String svgCode = SVGGenerator.generateSVG();
-		System.out.println(svgCode);
-		model.addAttribute("svgCode", svgCode);
+//		String svgCode = SVGGenerator.generateSVG();
+		TreeMap<String,String> answersNumbers = service.getPollAnswersStats(1, "T1Q2");
+		GraphContainer graphContainer = SVGGenerator.generateSVG(); // Poi mi farò restituire una lista di GraphContainers
+//		String svgCode = graphContainer.getSVGcode();
+//		Map<String,String> legend = graphContainer.getLegendMap();
+		
+//		System.out.println(svgCode);
+//		model.addAttribute("svgCode", svgCode);
+//		model.addAttribute("legend", legend);
+		model.addAttribute("graphContainer",graphContainer);
+//		System.out.println(legend);
 		return "poll.stats";
 	}	
 
