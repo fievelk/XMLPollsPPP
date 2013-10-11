@@ -3,6 +3,9 @@ package it.univaq.mwt.xml.xmlpollsppp.business;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.w3c.dom.DOMImplementation;
@@ -15,12 +18,15 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 public class SVGGenerator {
 	
 	public static String generateSVG() {
+		
 		// by choosing the namespace URI and the local name of the root element of SVG, we are creating an SVG document. //
 		
 		// We are using a constant available on the SVGDOMImplementation,
 		// but we could have used "http://www.w3.org/2000/svg".
 		String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
 		DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
+		
+		
 		Document doc = impl.createDocument(svgNS, "svg", null);
 		
 		// Get the root element (the 'svg' element).
@@ -29,17 +35,7 @@ public class SVGGenerator {
 		// Set the width and height attributes on the root 'svg' element.
 		svgRoot.setAttributeNS(null, "width", "400");
 		svgRoot.setAttributeNS(null, "height", "450");
-
-		// Create the rectangle.
-		Element rectangle = doc.createElementNS(svgNS, "rect");
-		rectangle.setAttributeNS(null, "x", "350");
-		rectangle.setAttributeNS(null, "y", "20");
-		rectangle.setAttributeNS(null, "width", "100");
-		rectangle.setAttributeNS(null, "height", "50");
-		rectangle.setAttributeNS(null, "fill", "red");
-
-		// Attach the rectangle to the root 'svg' element.
-		svgRoot.appendChild(rectangle);
+//		svgRoot.setAttributeNS(null, "xmlns", "http://www.w3.org/2000/svg");
 		
 		// Creo un cerchio
 		Element circle = doc.createElementNS(svgNS, "circle");
