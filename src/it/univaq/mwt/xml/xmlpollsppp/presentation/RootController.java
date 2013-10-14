@@ -1,11 +1,12 @@
 package it.univaq.mwt.xml.xmlpollsppp.presentation;
 
-import it.univaq.mwt.xml.xmlpollsppp.business.GraphContainer;
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.SVGGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.SubmittedPollGenerator;
 import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.GraphContainer;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
 
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
@@ -59,8 +60,9 @@ public class RootController {
 
 //		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 //		String svgCode = SVGGenerator.generateSVG();
-		TreeMap<String, BigDecimal> answersNumbers = service.getPollAnswersStats(1, "T1Q1");
+		TreeMap<Option, String> answersNumbers = service.getPollAnswersStats(1, "T1Q1");
 		GraphContainer graphContainer = SVGGenerator.generateSVG(); // Poi mi farò restituire una lista di GraphContainers
+//		GraphContainer graphContainer = SVGGenerator.generateSVG(answersNumbers); // Poi mi farò restituire una lista di GraphContainers
 //		String svgCode = graphContainer.getSVGcode();
 //		Map<String,String> legend = graphContainer.getLegendMap();
 		

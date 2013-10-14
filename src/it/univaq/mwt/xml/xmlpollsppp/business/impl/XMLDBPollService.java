@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.exist.xmldb.EXistResource;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ import org.xmldb.api.modules.XPathQueryService;
 
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
 
 @Service
 public class XMLDBPollService implements PollService {
@@ -227,34 +230,50 @@ public class XMLDBPollService implements PollService {
 	
 	
 	@Override
-	public TreeMap<String, BigDecimal> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
+	public TreeMap<Option, String> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
 		
-		TreeMap<String, BigDecimal> answersNumbers = new TreeMap<String, BigDecimal>();
+		TreeMap<Option, String> answersNumbers = new TreeMap<Option, String>();
+		List<Option> optionsList = new ArrayList<Option>();
+		
 		try {
 
-			// Prendo il testo di tutte le risposte della domanda (solo nel primo submittedPoll con quel codice). SBAGLIATO
-//            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'][1]//p:answer[starts-with(@code,'"+questionCode+"')]/text()", dbSubmittedPolls);
-            ResourceSet answersResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:option[starts-with(@code,'"+questionCode+"')]/@code", dbPollsSkeletons);
-//            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']", dbSubmittedPolls);
-//            ResourceSet answersResSet = queryDB("/p:submittedPoll", dbSubmittedPolls);
-//            System.out.println("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'][1]//p:answer[starts-with(@code,'"+questionCode+"')]/text()");
-//            String answerText = answersResSetText.getResource(0).getContent().toString();
-            System.out.println("SIZE: "+answersResSet.getSize());
-            // Per ogni risposta, conto nel db tutte le risposte uguali (con lo stesso testo)
+            ResourceSet optionsResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:option[starts-with(@code,'"+questionCode+"')]", dbPollsSkeletons);
             
-//            ResourceSet answersResSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+questionCode+"')]/text()", dbSubmittedPolls);
+            System.out.println("SIZE: "+optionsResSet.getSize());
+            // Per ogni opzione, conto nel db tutte le risposte uguali (con lo stesso codice)
             
-			if (answersResSet.getSize() > 0) {
+            // Prendo tutto l'elemento option, lo serializzo e ne estraggo la substring dopo "code".
+          //This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize it. An attribute always needs to be attached to an element when serialized
+            
+			if (optionsResSet.getSize() > 0) {
 				System.out.println("dentro l'if");
-	            ResourceIterator it = answersResSet.getIterator();
+				// Per ogni OPZIONE possibile prendo il codice, il testo e il numero di volte in cui ricorre nei submittedPolls
+	            ResourceIterator it = optionsResSet.getIterator();
 	            while (it.hasMoreResources()) {
-	                //prelevo la singola answer e la converto in String
-	                XMLResource answerCodeRes = (XMLResource) it.nextResource();
-	                String answerCode = answerCodeRes.getContent().toString(); //This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize it. An attribute always needs to be attached to an element when serialized
-	                System.out.println("ANSWER: "+answerCode);
-	                
-	                // Prelevo il titolo relativo al codice e lo converto in String
-//	                XMLResource titleRes = (XMLResource) xpqs.query("/p:poll/p:pollHead[p:code='" + code + "']/p:title/text()").getResource(0);
+	                // Prelevo la singola option xml e la converto in String. In seguito ne estraggo manualmente il code e il testo 
+	            	// tramite regex. Devo prelevare tutto il codice perché il code non può essere serializzato senza il suo parent element
+	                XMLResource optionRes = (XMLResource) it.nextResource();
+	                String optionString = optionRes.getContent().toString();
+	                // Prelevo il contenuto testuale
+	                Pattern pattern = Pattern.compile("(?<=>).*(?=</option>)");
+	                Matcher matcher = pattern.matcher(optionString);
+	                String optionContent = null;
+	                if (matcher.find()) {
+	                	optionContent = matcher.group(0);
+	                	System.out.println("OptionContent: "+optionContent);
+	                }
+	                // Prelevo il code
+	                pattern = Pattern.compile("(?<=code=\").*(?=\")");
+	                matcher = pattern.matcher(optionString);
+	                String optionCode = null;
+	                if (matcher.find()) {
+	                	optionCode = matcher.group(0);
+	                	System.out.println("OptionCode: "+optionCode);
+	                }
+	                // Creo l'Option e l'aggiungo alla lista optionsList
+	                Option option = new Option(optionCode, optionContent);
+	                optionsList.add(option);
+	                // Conto quante volte quella opzione è stata scelta come risposta
 	                ResourceSet countResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+questionCode+"')])", dbSubmittedPolls);
 	                XMLResource countRes = (XMLResource) countResSet.getResource(0);
 	                
@@ -262,7 +281,7 @@ public class XMLDBPollService implements PollService {
 	                System.out.println("COUNT: "+count);
 	                
 	                // Aggiungo testo della risposta e numero di preferenze all'hashmap
-//	                answersNumbers.put(answer, count);
+	                answersNumbers.put(option, count);
 	            }
 	        }
 		} catch (XMLDBException e) {

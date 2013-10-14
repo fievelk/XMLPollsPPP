@@ -1,5 +1,8 @@
 package it.univaq.mwt.xml.xmlpollsppp.business;
 
+import it.univaq.mwt.xml.xmlpollsppp.business.model.GraphContainer;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
+
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -10,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 import org.apache.batik.dom.svg.SVGDOMImplementation;
 import org.w3c.dom.DOMImplementation;
@@ -21,7 +25,8 @@ import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
 public class SVGGenerator {
 	
-	public static GraphContainer generateSVG() {
+//	public static GraphContainer generateSVG(TreeMap<Option, String> answersNumbers) {
+		public static GraphContainer generateSVG() {
 		
 		// Genero una Map per inserire le chiavi (non solo codici risposta) e i rispettivi colori
 		Map<String, String> legendMap = new LinkedHashMap<String, String>();
@@ -42,14 +47,15 @@ public class SVGGenerator {
 		svgRoot.setAttributeNS(null, "height", "450");
 		
 		// Creo un cerchio
-		Integer centerX = 100;
-		Integer centerY = 100;
+		Integer centerX = 150;
+		Integer centerY = 130;
 		Integer radius = 100;
 		Element circle = doc.createElementNS(svgNS, "circle");
 		circle.setAttributeNS(null, "cx", centerX.toString());
 		circle.setAttributeNS(null, "cy", centerY.toString());
 		circle.setAttributeNS(null, "r", radius.toString());
-		circle.setAttributeNS(null, "fill", "white");
+//		circle.setAttributeNS(null, "fill", "lightgrey");
+		circle.setAttributeNS(null, "fill-opacity", "0");
 		svgRoot.appendChild(circle);
 
 		// Prendo i dati relativi a ogni domanda (quante persone hanno dato una determinata risposta)
@@ -59,10 +65,10 @@ public class SVGGenerator {
 		
 		// Questi valori vanno presi tramite query sul db, quindi qui avrò solo la map answerNumbers
 		answersNumbers.put("T1Q1_1", BigDecimal.valueOf(113));
-		answersNumbers.put("T1Q1_2", BigDecimal.valueOf(100));
-		answersNumbers.put("T1Q1_3", BigDecimal.valueOf(50));
-		answersNumbers.put("T1Q1_4", BigDecimal.valueOf(28));
-		answersNumbers.put("T1Q1_5", BigDecimal.valueOf(27));
+//		answersNumbers.put("T1Q1_2", BigDecimal.valueOf(100));
+//		answersNumbers.put("T1Q1_3", BigDecimal.valueOf(50));
+//		answersNumbers.put("T1Q1_4", BigDecimal.valueOf(28));
+//		answersNumbers.put("T1Q1_5", BigDecimal.valueOf(27));
 		
 		// Uso dei BigDecimal: https://blogs.oracle.com/CoreJavaTechTips/entry/the_need_for_bigdecimal
 		
@@ -78,6 +84,7 @@ public class SVGGenerator {
 		BigDecimal roundAngle = new BigDecimal("360");
 		for (String key : answersNumbers.keySet()){
 			BigDecimal oldValue = answersNumbers.get(key);
+//			BigDecimal oldValue = new BigDecimal(answersNumbers.get(key));
 			System.out.print("Old value = "+oldValue);
 			BigDecimal newValue = (oldValue.multiply(roundAngle)).divide(answersValuesSum, 1, RoundingMode.HALF_UP);
 			System.out.print(" --> ");
@@ -92,25 +99,49 @@ public class SVGGenerator {
 		BigDecimal greekPI = new BigDecimal(Math.PI);
 		BigDecimal flatAngle = new BigDecimal("180");
 		
-		BigDecimal startAngleRadiantValue = new BigDecimal("0");
-		BigDecimal endAngleRadiantValue = new BigDecimal("0");
+//		BigDecimal startAngleRadiantValue = new BigDecimal("0");
+//		BigDecimal endAngleRadiantValue = new BigDecimal("0");
+		
+		BigDecimal startAngle = new BigDecimal("0");
+		BigDecimal endAngle = new BigDecimal("0");
 		
 		for (String key : answersNumbers.keySet()){
 			BigDecimal oldValue = answersNumbers.get(key);
-			BigDecimal thisAngleRadiantValue = (greekPI.multiply(oldValue)).divide(flatAngle, 1, RoundingMode.HALF_UP); // Trigonometria
+			
+			startAngle = endAngle;
+			endAngle = startAngle.add(oldValue);
+			
+			double x1 = centerX + radius*Math.cos(greekPI.multiply(startAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+			double y1 = centerY + radius*Math.sin(greekPI.multiply(startAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+			double x2 = centerX + radius*Math.cos(greekPI.multiply(endAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+			double y2 = centerY + radius*Math.sin(greekPI.multiply(endAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+			
+			x1 = Math.round(x1*100)/100;
+			y1 = Math.round(y1*100)/100;
+			x2 = Math.round(x2*100)/100;
+			y2 = Math.round(y2*100)/100;
+			
+//			BigDecimal x1 = centerX + radius*Math.cos(greekPI.multiply(startAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+//			BigDecimal y1 = centerY + radius*Math.sin(greekPI.multiply(startAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+//			BigDecimal x2 = centerX + radius*Math.cos(greekPI.multiply(endAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+//			BigDecimal y2 = centerY + radius*Math.sin(greekPI.multiply(endAngle.divide(flatAngle, 1, RoundingMode.HALF_UP)).doubleValue());
+			
+//			x1 = parseInt(200 + 180*Math.cos(Math.PI*startAngle/180));
+			
+/*			BigDecimal thisAngleRadiantValue = (greekPI.multiply(oldValue)).divide(flatAngle, 1, RoundingMode.HALF_UP); // Trigonometria
 			answersNumbersRadiants.put(key, thisAngleRadiantValue);
 			
 			startAngleRadiantValue = endAngleRadiantValue;
-			endAngleRadiantValue = startAngleRadiantValue.add(thisAngleRadiantValue);
+			endAngleRadiantValue = startAngleRadiantValue.add(thisAngleRadiantValue); */
 		// Calcolo i punti x e y da incontrare sulla circonferenza per tracciare l'arco relativo all'angolo
 			
 		// Coordinate del punti di partenza dell'arco sulla circonferenza	
-		double x1 = centerX + radius*Math.cos(startAngleRadiantValue.doubleValue());
-		double y1 = centerY + radius*Math.sin(startAngleRadiantValue.doubleValue());
+//		double x1 = centerX + radius*Math.cos(startAngleRadiantValue.doubleValue());
+//		double y1 = centerY + radius*Math.sin(startAngleRadiantValue.doubleValue());
 		
 		// Coordinate del punti di fine dell'arco sulla circonferenza
-		double x2 = centerX + radius*Math.cos(endAngleRadiantValue.doubleValue());
-		double y2 = centerY + radius*Math.sin(endAngleRadiantValue.doubleValue());
+//		double x2 = centerX + radius*Math.cos(endAngleRadiantValue.doubleValue());
+//		double y2 = centerY + radius*Math.sin(endAngleRadiantValue.doubleValue());
 		
 		// Genero un colore random
 		Random rand = new Random();
@@ -124,10 +155,23 @@ public class SVGGenerator {
 		System.out.println("COLOR = " + randomColor);
 		
 		path = doc.createElementNS(svgNS, "path");
-		String pathString = "M"+centerX+","+centerY + " L"+x1+","+y1 + " A100,100 0 0,1 " + x2+","+y2+ " z";
+//		String pathString = "M"+centerX+","+centerY + " L"+x1+","+y1 + " A100,100 0 0,1 " + x2+","+y2+ " z";
+//		String pathString = "M"+centerX+","+centerY + " L"+x1+","+y1 + " A100,100 0 1,1 " + x2+","+y2+ " z";
+		String pathString = "M"+centerX+","+centerY + " L"+x1+","+y1 + " A100,100 0 " + ((endAngle.doubleValue() - startAngle.doubleValue() > 180) ? 1 : 0)+ ",1 " + x2+","+(y2-0.1)+ " z";
+		
 		path.setAttributeNS(null, "d", pathString);
 		path.setAttributeNS(null, "fill", rgbColor);
 		svgRoot.appendChild(path);
+		
+		/*
+		 var d = "M200,200  L" + x1 + "," + y1 + "  A195,195 0 " + 
+                ((endAngle-startAngle > 180) ? 1 : 0) + ",1 " + x2 + "," + y2 + " z";
+        //alert(d); // enable to see coords as they are displayed
+        var c = parseInt(i / sectorAngleArr.length * 360);
+        var arc = makeSVG("path", {d: d, fill: "hsl(" + c + ", 66%, 50%)"});
+        paper.appendChild(arc);
+		 */
+		
 		
 		// Inserisco la chiave dello spicchio e il suo colore nella legendMap
 		legendMap.put(key, rgbColor);
@@ -149,6 +193,8 @@ public class SVGGenerator {
         // Rimuove la dichiarazione xml dall'output, per non farla comparire nella pagina html in cui il codice verrà incluso
         String regexXmlDeclaration="<\\?xml(.*?)\\?>";
         String result = byteArrayOutputStream.toString().replaceFirst(regexXmlDeclaration, "");
+        
+        System.out.println(result);
         
         GraphContainer graphContainer = new GraphContainer(result, legendMap);
         return graphContainer;
