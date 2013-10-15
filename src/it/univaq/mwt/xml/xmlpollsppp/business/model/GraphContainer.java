@@ -6,9 +6,9 @@ import java.util.Map;
 public class GraphContainer {
 
 	private String SVGcode;
-	private Map<String, String> legendMap = new LinkedHashMap<String, String>();
+	private Map<Option, String> legendMap = new LinkedHashMap<Option, String>();
 	
-	public GraphContainer(String sVGcode, Map<String, String> legendMap) {
+	public GraphContainer(String sVGcode, Map<Option, String> legendMap) {
 		super();
 		SVGcode = sVGcode;
 		this.legendMap = legendMap;
@@ -22,11 +22,11 @@ public class GraphContainer {
 		SVGcode = sVGcode;
 	}
 	
-	public Map<String, String> getLegendMap() {
+	public Map<Option, String> getLegendMap() {
 		return legendMap;
 	}
 	
-	public void setLegendMap(Map<String, String> legendMap) {
+	public void setLegendMap(Map<Option, String> legendMap) {
 		this.legendMap = legendMap;
 	}
 

@@ -1,40 +1,49 @@
 package it.univaq.mwt.xml.xmlpollsppp.business.model;
 
-public class Option {
+import java.util.List;
+
+public class Question {
 	
 	private String code;
 	private String content;
-	private Question question;
+	private List<Option> options;
 	
+	public Question(String code, String content, List<Option> options) {
+		super();
+		this.code = code;
+		this.content = content;
+		this.options = options;
+	}
 	
-	public Option(String code, String content) {
+	public Question(String code, String content) {
 		super();
 		this.code = code;
 		this.content = content;
 	}
-	
-	public Option() {
-		super();
-	}
+
 	public String getCode() {
 		return code;
 	}
+
 	public void setCode(String code) {
 		this.code = code;
 	}
+
 	public String getContent() {
 		return content;
 	}
+
 	public void setContent(String content) {
 		this.content = content;
 	}
 
-	public Question getQuestion() {
-		return question;
+	public List<Option> getOptions() {
+		return options;
 	}
 
-	public void setQuestion(Question question) {
-		this.question = question;
+	public void setOptions(List<Option> options) {
+		this.options = options;
 	}
 
+	
 }

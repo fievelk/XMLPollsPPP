@@ -7,9 +7,12 @@ import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.GraphContainer;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.Question;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -56,21 +59,26 @@ public class RootController {
 	}	
 	
 	@RequestMapping(value="/polls/{skeletonId}/stats.do")
-	public String pollStats(@PathVariable("skeletonId") String skeletonId, Model model) throws RepositoryError {
+	public String pollStats(@PathVariable("skeletonId") int skeletonId, Model model) throws RepositoryError {
 
-//		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
-//		String svgCode = SVGGenerator.generateSVG();
-		TreeMap<Option, String> answersNumbers = service.getPollAnswersStats(1, "T1Q1");
-		GraphContainer graphContainer = SVGGenerator.generateSVG(); // Poi mi farò restituire una lista di GraphContainers
-//		GraphContainer graphContainer = SVGGenerator.generateSVG(answersNumbers); // Poi mi farò restituire una lista di GraphContainers
-//		String svgCode = graphContainer.getSVGcode();
-//		Map<String,String> legend = graphContainer.getLegendMap();
+		List<Question> questions = service.getAllPollQuestions(skeletonId);
+		List<TreeMap> stats = new ArrayList<TreeMap>();
 		
-//		System.out.println(svgCode);
-//		model.addAttribute("svgCode", svgCode);
-//		model.addAttribute("legend", legend);
-		model.addAttribute("graphContainer",graphContainer);
-//		System.out.println(legend);
+		// Per ogni question, ottengo la mappa delle sue options e del numero di persone che le hanno selezionate
+		// Inserisco il risultato in una lista di queste mappe 
+		for (Question question : questions) {
+			TreeMap<Option, BigDecimal> answersNumbers = service.getPollAnswersStats(skeletonId, question.getCode());
+			stats.add(answersNumbers);
+		}
+		
+		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(stats);
+		
+		// answersNumbers è una TreeMap contenente l'opzione e il numero di persone che l'hanno selezionata
+//		TreeMap<Option, BigDecimal> answersNumbers = service.getPollAnswersStats(1, "T1Q1");
+//		GraphContainer graphContainer = SVGGenerator.generateSVG(answersNumbers); // Poi mi farò restituire una lista di GraphContainers
+//		model.addAttribute("graphContainer",graphContainer);
+		model.addAttribute("graphContainerList",graphContainerList);
+		
 		return "poll.stats";
 	}	
 
