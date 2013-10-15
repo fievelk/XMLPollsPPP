@@ -181,16 +181,6 @@ public class SVGGenerator {
 	path.setAttributeNS(null, "fill", rgbColor);
 	svgRoot.appendChild(path);
 	
-	/*
-	 var d = "M200,200  L" + x1 + "," + y1 + "  A195,195 0 " + 
-            ((endAngle-startAngle > 180) ? 1 : 0) + ",1 " + x2 + "," + y2 + " z";
-    //alert(d); // enable to see coords as they are displayed
-    var c = parseInt(i / sectorAngleArr.length * 360);
-    var arc = makeSVG("path", {d: d, fill: "hsl(" + c + ", 66%, 50%)"});
-    paper.appendChild(arc);
-	 */
-	
-	
 	// Inserisco la chiave dello spicchio e il suo colore nella legendMap
 	legendMap.put(key, rgbColor);
 	
@@ -210,11 +200,11 @@ public class SVGGenerator {
     
     // Rimuove la dichiarazione xml dall'output, per non farla comparire nella pagina html in cui il codice verrà incluso
     String regexXmlDeclaration="<\\?xml(.*?)\\?>";
-    String result = byteArrayOutputStream.toString().replaceFirst(regexXmlDeclaration, "");
+    String SVGresult = byteArrayOutputStream.toString().replaceFirst(regexXmlDeclaration, "");
     
-    System.out.println(result);
+    System.out.println(SVGresult);
     
-    GraphContainer graphContainer = new GraphContainer(result, legendMap);
+    GraphContainer graphContainer = new GraphContainer(SVGresult, legendMap);
     return graphContainer;
 }
 	

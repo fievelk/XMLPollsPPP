@@ -263,7 +263,6 @@ public class XMLDBPollService implements PollService {
 	                String optionContent = null;
 	                if (matcher.find()) {
 	                	optionContent = matcher.group(0);
-//	                	System.out.println("OptionContent: "+optionContent);
 	                }
 	                // Prelevo il code
 	                pattern = Pattern.compile("(?<=code=\").*?(?=\")");
@@ -271,25 +270,19 @@ public class XMLDBPollService implements PollService {
 	                String optionCode = null;
 	                if (matcher.find()) {
 	                	optionCode = matcher.group(0);
-//	                	System.out.println("OptionCode: "+optionCode);
 	                }
 	                // Creo l'Option e l'aggiungo alla lista optionsList
 	                Option option = new Option(optionCode, optionContent);
-//	                optionsList.add(option);
-//	                System.out.println("Optionslist "+optionsList);
 	                // Conto quante volte quella opzione è stata scelta come risposta
 	                ResourceSet countResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+optionCode+"')])", dbSubmittedPolls);
 	                XMLResource countRes = (XMLResource) countResSet.getResource(0);
 	                
 	                String count = countRes.getContent().toString();
-//	                System.out.println("COUNT: "+count);
 	                
 	                BigDecimal countBD = new BigDecimal(count);
 	                
 	                // Aggiungo testo della risposta e numero di preferenze all'hashmap
-//	                System.out.println("option "+option);
 	                answersNumbers.put(option, countBD);
-//	                System.out.println("Answersnumbers "+answersNumbers);
 	            }
 	            
 	        }
