@@ -1,21 +1,39 @@
 package it.univaq.mwt.xml.xmlpollsppp.business.model;
 
+import java.math.BigDecimal;
+
 public class Option {
 	
 	private String code;
 	private String content;
 	private Question question;
+	private BigDecimal count;
 	
-	
-	public Option(String code, String content) {
+	public Option(String code, String content, Question question,
+			BigDecimal count) {
 		super();
 		this.code = code;
 		this.content = content;
+		this.question = question;
+		this.count = count;
 	}
-	
-	public Option() {
+
+	public Option(String code, String content, BigDecimal count) {
 		super();
+		this.code = code;
+		this.content = content;
+		this.count = count;
 	}
+
+	public BigDecimal getCount() {
+		return count;
+	}
+
+	public void setCount(BigDecimal count) {
+		this.count = count;
+	}
+
+
 	public String getCode() {
 		return code;
 	}
