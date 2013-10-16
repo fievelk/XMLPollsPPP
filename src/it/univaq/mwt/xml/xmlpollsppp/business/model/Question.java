@@ -43,6 +43,9 @@ public class Question {
 
 	public void setOptions(List<Option> options) {
 		this.options = options;
+		for (Option option : options) {
+			option.setQuestion(this);
+		}
 	}
 
 	

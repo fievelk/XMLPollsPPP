@@ -7,7 +7,12 @@ public class GraphContainer {
 
 	private String SVGcode;
 	private Map<Option, String> legendMap = new LinkedHashMap<Option, String>();
+	private Question question; 
 	
+	public GraphContainer() {
+		super();
+	}
+
 	public GraphContainer(String sVGcode, Map<Option, String> legendMap) {
 		super();
 		SVGcode = sVGcode;
@@ -30,4 +35,14 @@ public class GraphContainer {
 		this.legendMap = legendMap;
 	}
 
+	public Question getQuestion() {
+		return question;
+	}
+
+	public void setQuestion(Question question) {
+		this.question = question;
+	}
+
+	
+	
 }

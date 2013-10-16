@@ -62,25 +62,15 @@ public class RootController {
 	public String pollStats(@PathVariable("skeletonId") int skeletonId, Model model) throws RepositoryError {
 
 		List<Question> questions = service.getAllPollQuestions(skeletonId);
-//		List<TreeMap> stats = new ArrayList<TreeMap>();
 		
 		// Per ogni question, ottengo la mappa delle sue options e del numero di persone che le hanno selezionate
 		// Inserisco il risultato in una lista di queste mappe 
 		for (Question question : questions) {
-//			TreeMap<Option, BigDecimal> answersNumbers = service.getPollAnswersStats(skeletonId, question.getCode());
 			List<Option> options = service.getPollAnswersStats(skeletonId, question.getCode());
-//			stats.add(answersNumbers);
 			question.setOptions(options);
 		}
-//		for (Question question : questions) {
-//			for (Option opt : question.getOptions())
-//				System.out.println(opt.getCount());
-//		}
-		
-//		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(stats);
 		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(questions);
 		
-		// answersNumbers è una TreeMap contenente l'opzione e il numero di persone che l'hanno selezionata
 		model.addAttribute("graphContainerList",graphContainerList);
 		
 		return "poll.stats";

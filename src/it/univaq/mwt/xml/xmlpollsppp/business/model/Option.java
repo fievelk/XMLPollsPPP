@@ -8,6 +8,8 @@ public class Option {
 	private String content;
 	private Question question;
 	private BigDecimal count;
+	private BigDecimal angleValue;
+	private BigDecimal percentValue;
 	
 	public Option(String code, String content, Question question,
 			BigDecimal count) {
@@ -23,6 +25,15 @@ public class Option {
 		this.code = code;
 		this.content = content;
 		this.count = count;
+	}
+	
+
+	public BigDecimal getAngleValue() {
+		return angleValue;
+	}
+
+	public void setAngleValue(BigDecimal angleValue) {
+		this.angleValue = angleValue;
 	}
 
 	public BigDecimal getCount() {
@@ -55,4 +66,14 @@ public class Option {
 		this.question = question;
 	}
 
+	public BigDecimal getPercentValue() {
+		return percentValue;
+	}
+
+	public void setPercentValue(BigDecimal percentValue) {
+		this.percentValue = percentValue;
+	}
+
+	
+	
 }

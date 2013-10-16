@@ -234,29 +234,22 @@ public class XMLDBPollService implements PollService {
 	@Override
 	public List<Option> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
 		
-//		TreeMap<Option, BigDecimal> answersNumbers = new TreeMap<Option, BigDecimal>(new MyComparator());
 		List<Option> optionsList = new ArrayList<Option>();
 		
 		try {
-
             ResourceSet optionsResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:option[starts-with(@code,'"+questionCode+"')]", dbPollsSkeletons);
-            
-//            System.out.println("SIZE: "+optionsResSet.getSize());
-            // Per ogni opzione, conto nel db tutte le risposte uguali (con lo stesso codice)
-            
-            // Prendo tutto l'elemento option, lo serializzo e ne estraggo la substring dopo "code".
-          //This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize it. An attribute always needs to be attached to an element when serialized
-            
-			if (optionsResSet.getSize() > 0) {
-//				System.out.println("dentro l'if");
+
+            if (optionsResSet.getSize() > 0) {
 				// Per ogni OPZIONE possibile prendo il codice, il testo e il numero di volte in cui ricorre nei submittedPolls
 	            ResourceIterator it = optionsResSet.getIterator();
 	            while (it.hasMoreResources()) {
 	                // Prelevo la singola option xml e la converto in String. In seguito ne estraggo manualmente il code e il testo 
 	            	// tramite regex. Devo prelevare tutto il codice perché il code non può essere serializzato senza il suo parent element
+	                // This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize 
+	            	// it. An attribute always needs to be attached to an element when serialized
 	                XMLResource optionRes = (XMLResource) it.nextResource();
 	                String optionString = optionRes.getContent().toString();
-//	                System.out.println("Option string: "+optionString);
+	                
 	                // Prelevo il contenuto testuale
 	                Pattern pattern = Pattern.compile("(?<=>).*(?=</option>)");
 	                Matcher matcher = pattern.matcher(optionString);
@@ -264,6 +257,7 @@ public class XMLDBPollService implements PollService {
 	                if (matcher.find()) {
 	                	optionContent = matcher.group(0);
 	                }
+	                
 	                // Prelevo il code
 	                pattern = Pattern.compile("(?<=code=\").*?(?=\")");
 	                matcher = pattern.matcher(optionString);
@@ -271,19 +265,15 @@ public class XMLDBPollService implements PollService {
 	                if (matcher.find()) {
 	                	optionCode = matcher.group(0);
 	                }
+	                
 	                // Conto quante volte quella opzione è stata scelta come risposta
 	                ResourceSet countResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+optionCode+"')])", dbSubmittedPolls);
 	                XMLResource countRes = (XMLResource) countResSet.getResource(0);
-	                
 	                String count = countRes.getContent().toString();
-	                
 	                BigDecimal countBD = new BigDecimal(count);
 	                
 	                // Creo l'Option e l'aggiungo alla lista optionsList
 	                Option option = new Option(optionCode, optionContent, countBD);
-	                
-	                // Aggiungo testo della risposta e numero di preferenze all'hashmap
-//	                answersNumbers.put(option, countBD);
 	                optionsList.add(option);
 	            }
 	            
@@ -291,8 +281,6 @@ public class XMLDBPollService implements PollService {
 		} catch (XMLDBException e) {
 			e.printStackTrace();
 		}
-//		System.out.println("ANSWERSNUMBERS: "+answersNumbers);
-//		return answersNumbers;
 		return optionsList;
 	}
 	

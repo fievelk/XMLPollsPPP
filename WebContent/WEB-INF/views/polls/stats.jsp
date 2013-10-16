@@ -2,17 +2,24 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/xml" prefix="x" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<h2 class="text-info">Lista dei sondaggi disponibili:</h2>
+<h2 class="text-info">Statistiche:</h2>
 
 <c:forEach items="${graphContainerList}" var="graphContainer">
+<div class="row">
+<h4>${graphContainer.question.code}: ${graphContainer.question.content}</h4>
+</div>
 <div class="row">
 	<div class="span3">
 		${graphContainer.SVGcode}
 	</div>
-	<div class="span9">
+	<div class="span9" style="margin-top:15px;">
 		<c:forEach items="${graphContainer.legendMap}" var="legend">
-			<div style="width:50px;height:20px;border:1px solid #000;background-color:${legend.value};"></div>${legend.key.code} - ${legend.key.content}
-			<br>			
+		<c:set var="option" value="${legend.key}" />
+			<div style="display:block">
+				<div style="float:left; display:inline; width:50px;height:20px;border:1px solid #000;background-color:${legend.value};"></div>
+				<div style="right; display:inline;">&nbsp;<strong>${option.percentValue}&#37; </strong> [${option.count}] - ${option.content} (${option.code})</div>
+			</div>
+			<br>
 		</c:forEach>
 	</div>
 </div>
