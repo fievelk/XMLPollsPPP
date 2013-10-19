@@ -26,6 +26,7 @@ import it.univaq.mwt.xml.xmlpollsppp.business.MyComparator;
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.Poll;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Question;
 
 @Service
@@ -284,75 +285,22 @@ public class XMLDBPollService implements PollService {
 		return optionsList;
 	}
 	
-/*	@Override
-	public TreeMap<Option, BigDecimal> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
-		
-		TreeMap<Option, BigDecimal> answersNumbers = new TreeMap<Option, BigDecimal>(new MyComparator());
-//		List<Option> optionsList = new ArrayList<Option>();
-		
-		try {
-
-            ResourceSet optionsResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:option[starts-with(@code,'"+questionCode+"')]", dbPollsSkeletons);
-            
-//            System.out.println("SIZE: "+optionsResSet.getSize());
-            // Per ogni opzione, conto nel db tutte le risposte uguali (con lo stesso codice)
-            
-            // Prendo tutto l'elemento option, lo serializzo e ne estraggo la substring dopo "code".
-          //This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize it. An attribute always needs to be attached to an element when serialized
-            
-			if (optionsResSet.getSize() > 0) {
-//				System.out.println("dentro l'if");
-				// Per ogni OPZIONE possibile prendo il codice, il testo e il numero di volte in cui ricorre nei submittedPolls
-	            ResourceIterator it = optionsResSet.getIterator();
-	            while (it.hasMoreResources()) {
-	                // Prelevo la singola option xml e la converto in String. In seguito ne estraggo manualmente il code e il testo 
-	            	// tramite regex. Devo prelevare tutto il codice perché il code non può essere serializzato senza il suo parent element
-	                XMLResource optionRes = (XMLResource) it.nextResource();
-	                String optionString = optionRes.getContent().toString();
-//	                System.out.println("Option string: "+optionString);
-	                // Prelevo il contenuto testuale
-	                Pattern pattern = Pattern.compile("(?<=>).*(?=</option>)");
-	                Matcher matcher = pattern.matcher(optionString);
-	                String optionContent = null;
-	                if (matcher.find()) {
-	                	optionContent = matcher.group(0);
-	                }
-	                // Prelevo il code
-	                pattern = Pattern.compile("(?<=code=\").*?(?=\")");
-	                matcher = pattern.matcher(optionString);
-	                String optionCode = null;
-	                if (matcher.find()) {
-	                	optionCode = matcher.group(0);
-	                }
-	                // Creo l'Option e l'aggiungo alla lista optionsList
-	                Option option = new Option(optionCode, optionContent);
-	                // Conto quante volte quella opzione è stata scelta come risposta
-	                ResourceSet countResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:answer[starts-with(@code,'"+optionCode+"')])", dbSubmittedPolls);
-	                XMLResource countRes = (XMLResource) countResSet.getResource(0);
-	                
-	                String count = countRes.getContent().toString();
-	                
-	                BigDecimal countBD = new BigDecimal(count);
-	                
-	                // Aggiungo testo della risposta e numero di preferenze all'hashmap
-	                answersNumbers.put(option, countBD);
-	            }
-	            
-	        }
-		} catch (XMLDBException e) {
-			e.printStackTrace();
-		}
-//		System.out.println("ANSWERSNUMBERS: "+answersNumbers);
-		return answersNumbers;
-	}*/
 	
-
 	@Override
-	public List<Question> getAllPollQuestions(int pollCode) throws RepositoryError {
+	public Poll getPollInfos(int pollCode) throws RepositoryError {
 		List<Question> questionsList = new ArrayList<Question>();
+		List<Question> nonRequiredQuestions = new ArrayList<Question>();
 		
+		
+		Poll poll = new Poll();
 		try {
-
+			
+			ResourceSet submissionsCountResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'])", dbSubmittedPolls);
+			XMLResource submissionsCountRes = (XMLResource) submissionsCountResSet.getResource(0);
+			BigDecimal submissionsCount = new BigDecimal(submissionsCountRes.getContent().toString());
+			poll.setPollSubmissions(submissionsCount);
+//			System.out.println("SC "+submissionsCount);
+			
             ResourceSet questionsResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:question", dbPollsSkeletons);
             
             // Prendo tutto l'elemento option, lo serializzo e ne estraggo la substring dopo "code".
@@ -364,7 +312,10 @@ public class XMLDBPollService implements PollService {
 	            while (it.hasMoreResources()) {
 	                // Prelevo la singola question xml e la converto in String. In seguito ne estraggo manualmente il code e il testo 
 	            	// tramite regex. Devo prelevare tutto il codice perché il code non può essere serializzato senza il suo parent element
-	                XMLResource questionRes = (XMLResource) it.nextResource();
+	                
+	            	Question question = new Question();
+	            	XMLResource questionRes = (XMLResource) it.nextResource();
+	                
 	                String questionString = questionRes.getContent().toString();
 //	                System.out.println("Question string: "+questionString);
 	                // Prelevo il contenuto testuale
@@ -373,7 +324,7 @@ public class XMLDBPollService implements PollService {
 	                String questionContent = null;
 	                if (matcher.find()) {
 	                	questionContent = matcher.group(0);
-	                	System.out.println("QuestionContent: "+questionContent);
+//	                	System.out.println("QuestionContent: "+questionContent);
 	                }
 	                // Prelevo il code
 	                pattern = Pattern.compile("(?<=code=\").*?(?=\")");
@@ -381,11 +332,121 @@ public class XMLDBPollService implements PollService {
 	                String questionCode = null;
 	                if (matcher.find()) {
 	                	questionCode = matcher.group(0);
-	                	System.out.println("QuestionCode: "+questionCode);
+//	                	System.out.println("QuestionCode: "+questionCode);
 	                }
+	                
+	                // Controllo se la question sia required o meno
+	                pattern = Pattern.compile("(?<=required=\")true?(?=\")");
+	                matcher = pattern.matcher(questionString);
+	                String questionRequired = null;
+	                if (matcher.find()) {
+	                	questionRequired = matcher.group(0);
+//	                	System.out.println("Question required group: "+questionRequired);
+	                	question.setRequired(true);
+	                } else {
+	                	nonRequiredQuestions.add(question);
+//	                	System.out.println("ADDED");
+	                }
+
 	                // Creo la Question e l'aggiungo alla lista optionsList
-	                Question question = new Question(questionCode, questionContent);
+	                question.setCode(questionCode);
+	                question.setContent(questionContent);
+//	                Question question = new Question(questionCode, questionContent, required);
 	                questionsList.add(question);
+	                
+//	                System.out.println("Question required? "+question.isRequired());
+	            }
+	            poll.setQuestions(questionsList);
+	            BigDecimal submissionsWithOptAnswer = getOptionalSubmissionCount(pollCode, nonRequiredQuestions);
+	            poll.setSubmissionsWithNonReqAnswer(submissionsWithOptAnswer);
+	        }
+		} catch (XMLDBException e) {
+			e.printStackTrace();
+		}
+		return poll;
+	}
+
+	private BigDecimal getOptionalSubmissionCount(int pollCode, List<Question> nonRequiredQuestions) throws RepositoryError{
+		
+		for (Question nonReqQuestion: nonRequiredQuestions){
+			String nonReqQuestionCode = nonReqQuestion.getCode();
+			
+			ResourceSet nonReqSubmissionsCRSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:pollBody/p:topic/p:topicBody/p:answer[starts-with(@code,'"+nonReqQuestionCode+"')])", dbSubmittedPolls);
+			// In questo modo mi restituisce 2, nel caso in cui io dia 2 risposte alla stessa domanda opzionale.
+			// Devo farmi restituire 1 per ogni GRUPPO di risposte a domande opzionali. NO.
+			// Devo farmi restituire il numero di poll che abbiano ALMENO una risposta a una domanda opzionale.
+		}
+		
+		
+		return null;
+		
+	}
+
+	
+	
+	
+/*	@Override
+	public List<Question> getAllPollQuestions(int pollCode) throws RepositoryError {
+		List<Question> questionsList = new ArrayList<Question>();
+//		Poll poll = new Poll();
+		try {
+			
+//			ResourceSet questionsCountResSet = queryDB("count(/p:poll[p:pollHead/p:code='"+pollCode+"']//p:question)", dbPollsSkeletons);
+//			XMLResource questionsCountRes = (XMLResource) questionsCountResSet.getResource(0);
+//			BigDecimal questionsCount = new BigDecimal(questionsCountRes.getContent().toString());
+//			poll.setQuestionsCount(questionsCount);
+			
+            ResourceSet questionsResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:question", dbPollsSkeletons);
+            
+            // Prendo tutto l'elemento option, lo serializzo e ne estraggo la substring dopo "code".
+          //This is compliant with the XQuery specification: you can query for an attribute, but you are not allowed to serialize it. An attribute always needs to be attached to an element when serialized
+            
+			if (questionsResSet.getSize() > 0) {
+				// Per ogni QUESTION possibile prendo il codice e il testo
+	            ResourceIterator it = questionsResSet.getIterator();
+	            while (it.hasMoreResources()) {
+	                // Prelevo la singola question xml e la converto in String. In seguito ne estraggo manualmente il code e il testo 
+	            	// tramite regex. Devo prelevare tutto il codice perché il code non può essere serializzato senza il suo parent element
+	                
+	            	Question question = new Question();
+	            	XMLResource questionRes = (XMLResource) it.nextResource();
+	                
+	                String questionString = questionRes.getContent().toString();
+	                System.out.println("Question string: "+questionString);
+	                // Prelevo il contenuto testuale
+	                Pattern pattern = Pattern.compile("(?<=>).*(?=</question>)");
+	                Matcher matcher = pattern.matcher(questionString);
+	                String questionContent = null;
+	                if (matcher.find()) {
+	                	questionContent = matcher.group(0);
+//	                	System.out.println("QuestionContent: "+questionContent);
+	                }
+	                // Prelevo il code
+	                pattern = Pattern.compile("(?<=code=\").*?(?=\")");
+	                matcher = pattern.matcher(questionString);
+	                String questionCode = null;
+	                if (matcher.find()) {
+	                	questionCode = matcher.group(0);
+//	                	System.out.println("QuestionCode: "+questionCode);
+	                }
+	                
+	                // Controllo se la question sia required o meno
+	                pattern = Pattern.compile("(?<=required=\").*?(?=\")");
+	                matcher = pattern.matcher(questionString);
+	                String questionRequired = null;
+	                if (matcher.find()) {
+	                	questionRequired = matcher.group(0);
+	                	System.out.println("Question required group: "+questionRequired);
+	                	question.setRequired(true);
+	                }
+
+	                // Creo la Question e l'aggiungo alla lista optionsList
+	                question.setCode(questionCode);
+	                question.setContent(questionContent);
+//	                Question question = new Question(questionCode, questionContent, required);
+	                questionsList.add(question);
+	                
+	                System.out.println("Question required? "+question.isRequired());
 	            }
 	            
 	        }
@@ -393,7 +454,7 @@ public class XMLDBPollService implements PollService {
 			e.printStackTrace();
 		}
 		return questionsList;
-	}
+	}*/
     
 	
     // XSLT QUERIES

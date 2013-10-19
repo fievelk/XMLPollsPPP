@@ -7,13 +7,10 @@ import it.univaq.mwt.xml.xmlpollsppp.business.XSLTTransform;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.GraphContainer;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
+import it.univaq.mwt.xml.xmlpollsppp.business.model.Poll;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Question;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +58,8 @@ public class RootController {
 	@RequestMapping(value="/polls/{skeletonId}/stats.do")
 	public String pollStats(@PathVariable("skeletonId") int skeletonId, Model model) throws RepositoryError {
 
-		List<Question> questions = service.getAllPollQuestions(skeletonId);
+		Poll poll = service.getPollInfos(skeletonId);
+		List<Question> questions = poll.getQuestions();
 		
 		// Per ogni question, ottengo la mappa delle sue options e del numero di persone che le hanno selezionate
 		// Inserisco il risultato in una lista di queste mappe 
@@ -69,7 +67,8 @@ public class RootController {
 			List<Option> options = service.getPollAnswersStats(skeletonId, question.getCode());
 			question.setOptions(options);
 		}
-		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(questions);
+//		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(questions);
+		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(poll);
 		
 		model.addAttribute("graphContainerList",graphContainerList);
 		
