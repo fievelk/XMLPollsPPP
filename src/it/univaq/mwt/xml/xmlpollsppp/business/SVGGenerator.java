@@ -60,7 +60,7 @@ public class SVGGenerator {
 		return svgRoot;
 	}
 	
-	public static GraphContainer generateRequiredQuestionsStatsSVG(List<Question> questions) {
+	public static GraphContainer generateNonRequiredQuestionsStatsSVG(List<Question> questions) {
 		GraphContainer graphContainer = new GraphContainer();
 		// Genero una Map per inserire le chiavi (non solo codici risposta) e i rispettivi colori
 		Map<Option, String> legendMap = new LinkedHashMap<Option, String>();
@@ -80,17 +80,8 @@ public class SVGGenerator {
 			return null;
 		}
 		
-		// Ora devo prendere il numero di utenti che hanno risposto alle domande opzionali (non contando le doppie risposte alla stessa domanda)
-		// utenti che hanno risposto alle domande opzionali
-		BigDecimal submissionsWithOptional = new BigDecimal("0");
-		// Se la domanda non è required, itero. Se almeno una delle sue opzioni ha
+		BigDecimal submissionsWithNonReqAnswer = poll.getSubmissionsWithNonReqAnswer();
 		// conto il numero di sondaggi submitted che hanno almeno una risposta fornita a una question non required
-		for (Question question : poll.getQuestions())
-			if (!question.isRequired()) {
-				for(Option option : question.getOptions()){
-					
-				}
-			}
 		
 		
 		// Ora devo trasformare questi valori in angoli rispetto ai 360 gradi del cerchio.

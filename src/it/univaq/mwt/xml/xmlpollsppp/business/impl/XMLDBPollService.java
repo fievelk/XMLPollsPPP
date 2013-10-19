@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.xmldb.api.DatabaseManager;
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Database;
+import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.ResourceIterator;
 import org.xmldb.api.base.ResourceSet;
 import org.xmldb.api.base.XMLDBException;
@@ -357,7 +358,7 @@ public class XMLDBPollService implements PollService {
 //	                System.out.println("Question required? "+question.isRequired());
 	            }
 	            poll.setQuestions(questionsList);
-	            BigDecimal submissionsWithOptAnswer = getOptionalSubmissionCount(pollCode, nonRequiredQuestions);
+	            BigDecimal submissionsWithOptAnswer = getOptionalSubmissionCount(pollCode);
 	            poll.setSubmissionsWithNonReqAnswer(submissionsWithOptAnswer);
 	        }
 		} catch (XMLDBException e) {
@@ -365,13 +366,30 @@ public class XMLDBPollService implements PollService {
 		}
 		return poll;
 	}
+	
+	private BigDecimal getOptionalSubmissionCount(int pollCode) throws RepositoryError{
+		// Devo farmi restituire il numero di poll che abbiano ALMENO una risposta a una domanda opzionale.
+		ResourceSet nonReqSubmissionsCRSet = queryDB("count(/p:submittedPoll[//p:code='"+pollCode+"' and//p:answer[preceding-sibling::def:question[1][not(@required) or (@required='false')]]])", dbSubmittedPolls);
+		BigDecimal submissionsWithOptAnswer = null;
+		try {
+			Resource nonReqSubmission = nonReqSubmissionsCRSet.getResource(0);
+			submissionsWithOptAnswer = new BigDecimal(nonReqSubmission.getContent().toString());
+		} catch (XMLDBException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		return submissionsWithOptAnswer;
+		
+	}
 
-	private BigDecimal getOptionalSubmissionCount(int pollCode, List<Question> nonRequiredQuestions) throws RepositoryError{
+/*	private BigDecimal getOptionalSubmissionCount(int pollCode, List<Question> nonRequiredQuestions) throws RepositoryError{
 		
 		for (Question nonReqQuestion: nonRequiredQuestions){
 			String nonReqQuestionCode = nonReqQuestion.getCode();
 			
-			ResourceSet nonReqSubmissionsCRSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:pollBody/p:topic/p:topicBody/p:answer[starts-with(@code,'"+nonReqQuestionCode+"')])", dbSubmittedPolls);
+//			ResourceSet nonReqSubmissionsCRSet = queryDB("/p:submittedPoll[p:pollHead/p:code='"+pollCode+"']//p:pollBody/p:topic/p:topicBody/p:answer[starts-with(@code,'"+nonReqQuestionCode+"')])", dbSubmittedPolls);
+			ResourceSet nonReqSubmissionsCRSet = queryDB("count(/p:submittedPoll[//p:code='"+pollCode+"' and//p:answer[preceding-sibling::def:question[1][not(@required) or (@required='false')]]])", dbSubmittedPolls);
 			// In questo modo mi restituisce 2, nel caso in cui io dia 2 risposte alla stessa domanda opzionale.
 			// Devo farmi restituire 1 per ogni GRUPPO di risposte a domande opzionali. NO.
 			// Devo farmi restituire il numero di poll che abbiano ALMENO una risposta a una domanda opzionale.
@@ -380,7 +398,7 @@ public class XMLDBPollService implements PollService {
 		
 		return null;
 		
-	}
+	}*/
 
 	
 	
