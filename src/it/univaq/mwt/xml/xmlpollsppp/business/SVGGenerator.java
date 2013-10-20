@@ -87,17 +87,9 @@ public class SVGGenerator {
 		// Ora devo trasformare questi valori in angoli rispetto ai 360 gradi del cerchio.
 		BigDecimal roundAngle = new BigDecimal("360");
 		BigDecimal oneHundred = new BigDecimal("100");
-		for (Option option : options){
-			BigDecimal oldValue = option.getCount();
-//			System.out.print("Old value = "+oldValue);
-			BigDecimal newValue = (oldValue.multiply(roundAngle)).divide(optionCountTotal, 1, RoundingMode.HALF_UP);
-//			System.out.print(" --> ");
-//			System.out.println("New value = "+newValue);
-//			option.setCount(newValue);
-			option.setAngleValue(newValue);
+		BigDecimal angleValue = (submissionsWithNonReqAnswer.multiply(roundAngle)).divide(pollSubmissions, 1, RoundingMode.HALF_UP);
 			
-			option.setPercentValue((oneHundred.multiply(oldValue)).divide(optionCountTotal, 1, RoundingMode.HALF_UP));
-		}
+//			option.setPercentValue((oneHundred.multiply(oldValue)).divide(optionCountTotal, 1, RoundingMode.HALF_UP));
 
 		// Converto ogni angolo in radiante creando una nuova LinkedHashMap su misura
 		// (Copiando le key della map answersNumbers)
@@ -108,8 +100,7 @@ public class SVGGenerator {
 		BigDecimal startAngle = new BigDecimal("0");
 		BigDecimal endAngle = new BigDecimal("0");
 		
-		for (Option option : options){
-			BigDecimal oldAngleValue = option.getAngleValue();
+			BigDecimal oldAngleValue = angleValue;
 			
 			startAngle = endAngle;
 			endAngle = startAngle.add(oldAngleValue);
@@ -137,7 +128,6 @@ public class SVGGenerator {
 			legendMap.put(option, rgbColor);
 			
 			graphContainer.setQuestion(option.getQuestion());
-		}
 			
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 	    
