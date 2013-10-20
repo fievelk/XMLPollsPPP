@@ -3,17 +3,17 @@ package it.univaq.mwt.xml.xmlpollsppp.business.model;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class GraphContainer {
+public class GraphContainer<K, V> {
 
 	private String SVGcode;
-	private Map<Option, String> legendMap = new LinkedHashMap<Option, String>();
+	private Map<K,V> legendMap = new LinkedHashMap<K, V>();
 	private Question question; 
 	
 	public GraphContainer() {
 		super();
 	}
 
-	public GraphContainer(String sVGcode, Map<Option, String> legendMap) {
+	public GraphContainer(String sVGcode, Map<K, V> legendMap) {
 		super();
 		SVGcode = sVGcode;
 		this.legendMap = legendMap;
@@ -27,11 +27,11 @@ public class GraphContainer {
 		SVGcode = sVGcode;
 	}
 	
-	public Map<Option, String> getLegendMap() {
+	public Map<K, V> getLegendMap() {
 		return legendMap;
 	}
 	
-	public void setLegendMap(Map<Option, String> legendMap) {
+	public void setLegendMap(Map<K, V> legendMap) {
 		this.legendMap = legendMap;
 	}
 

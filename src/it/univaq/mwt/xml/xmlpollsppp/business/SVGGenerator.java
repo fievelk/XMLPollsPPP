@@ -26,7 +26,6 @@ import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 
 public class SVGGenerator {
-	private static Poll poll;
 	private static Integer centerX = 0;
 	private static Integer centerY = 0;
 	private static Integer radius = 0;
@@ -38,7 +37,7 @@ public class SVGGenerator {
 	
 	public static List<GraphContainer> generateSVG(Poll poll) {
 		List<GraphContainer> graphContainerList = new ArrayList<GraphContainer>();
-		
+//		System.out.println("Poll Submissions in generateSVG: "+poll.getPollSubmissions());
 		for (Question question : poll.getQuestions()) {
 			List<Option> options = question.getOptions();
 				GraphContainer graphContainer = generateQuestionStatsSVG(options);
@@ -46,6 +45,16 @@ public class SVGGenerator {
 					graphContainerList.add(graphContainer);	
 				}
 			}
+		return graphContainerList;
+	}
+	
+	public static List<GraphContainer> generateNonReqSVG(Poll poll) {
+		List<GraphContainer> graphContainerList = new ArrayList<GraphContainer>();
+//		System.out.println("Poll Submissions in SVGGenerator: "+poll.getPollSubmissions());
+		GraphContainer graphContainer = generateNonRequiredQuestionsStatsSVG(poll);
+		if (graphContainer != null) {
+			graphContainerList.add(graphContainer);	
+		}
 		return graphContainerList;
 	}
 	
@@ -60,10 +69,13 @@ public class SVGGenerator {
 		return svgRoot;
 	}
 	
-	public static GraphContainer generateNonRequiredQuestionsStatsSVG(List<Question> questions) {
-		GraphContainer graphContainer = new GraphContainer();
+	public static GraphContainer<Option, String> generateNonRequiredQuestionsStatsSVG(Poll poll) {
+		GraphContainer<Option, String> graphContainer = new GraphContainer<Option, String>();
 		// Genero una Map per inserire le chiavi (non solo codici risposta) e i rispettivi colori
 		Map<Option, String> legendMap = new LinkedHashMap<Option, String>();
+		
+	    // Tratto gli slice come se fossero delle Option, per semplificare l'iterazione successiva
+	    List<Option> slices = new ArrayList<Option>();
 		
 		Element svgRoot = generateSVGRoot();
 		Element circle = generateCircle(doc, svgNS);
@@ -80,16 +92,26 @@ public class SVGGenerator {
 			return null;
 		}
 		
-		BigDecimal submissionsWithNonReqAnswer = poll.getSubmissionsWithNonReqAnswer();
-		// conto il numero di sondaggi submitted che hanno almeno una risposta fornita a una question non required
-		
-		
+	    // conto il numero di sondaggi submitted che hanno almeno una risposta fornita a una question non required
+	    BigDecimal submissionsWithNonReqAnswer = poll.getSubmissionsWithNonReqAnswer();
+	    BigDecimal submissionsWithOnlyReqAnswer = pollSubmissions.subtract(submissionsWithNonReqAnswer);
+	    
+	    // Creo le slice trattandole come se fossero delle Option e le inserisco in una lista (sulla quale avrà luogo l'iterazione per la creazione dei path)
+	    Option sliceNonReq = new Option("Sondaggi inoltrati con risposte opzionali", submissionsWithNonReqAnswer);
+	    Option sliceOnlyReq = new Option("Sondaggi inoltrati senza fonire alcuna risposta opzionale", submissionsWithOnlyReqAnswer);
+	    slices.add(sliceOnlyReq);
+	    slices.add(sliceNonReq);
+
 		// Ora devo trasformare questi valori in angoli rispetto ai 360 gradi del cerchio.
 		BigDecimal roundAngle = new BigDecimal("360");
 		BigDecimal oneHundred = new BigDecimal("100");
-		BigDecimal angleValue = (submissionsWithNonReqAnswer.multiply(roundAngle)).divide(pollSubmissions, 1, RoundingMode.HALF_UP);
-			
-//			option.setPercentValue((oneHundred.multiply(oldValue)).divide(optionCountTotal, 1, RoundingMode.HALF_UP));
+		
+		for (Option slice: slices){
+			BigDecimal oldValue = slice.getCount();
+			BigDecimal newValue = (oldValue.multiply(roundAngle)).divide(pollSubmissions, 1, RoundingMode.HALF_UP);
+			slice.setAngleValue(newValue);
+			slice.setPercentValue((oneHundred.multiply(oldValue)).divide(pollSubmissions, 1, RoundingMode.HALF_UP));
+		}
 
 		// Converto ogni angolo in radiante creando una nuova LinkedHashMap su misura
 		// (Copiando le key della map answersNumbers)
@@ -100,7 +122,8 @@ public class SVGGenerator {
 		BigDecimal startAngle = new BigDecimal("0");
 		BigDecimal endAngle = new BigDecimal("0");
 		
-			BigDecimal oldAngleValue = angleValue;
+		for (Option slice : slices){
+			BigDecimal oldAngleValue = slice.getAngleValue();
 			
 			startAngle = endAngle;
 			endAngle = startAngle.add(oldAngleValue);
@@ -125,9 +148,9 @@ public class SVGGenerator {
 			svgRoot.appendChild(path);
 			
 			// Inserisco la option dello spicchio e il suo colore nella legendMap
-			legendMap.put(option, rgbColor);
-			
-			graphContainer.setQuestion(option.getQuestion());
+			legendMap.put(slice, rgbColor);
+		}
+//			graphContainer.setQuestion(option.getQuestion());
 			
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 	    
@@ -144,7 +167,7 @@ public class SVGGenerator {
 	    String regexXmlDeclaration="<\\?xml(.*?)\\?>";
 	    String SVGresult = byteArrayOutputStream.toString().replaceFirst(regexXmlDeclaration, "");
 	    
-//	    System.out.println(SVGresult);
+	    System.out.println(SVGresult);
 	    
 	    graphContainer.setLegendMap(legendMap);
 	    graphContainer.setSVGcode(SVGresult);

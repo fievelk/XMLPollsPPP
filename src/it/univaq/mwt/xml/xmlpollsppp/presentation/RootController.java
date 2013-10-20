@@ -59,6 +59,7 @@ public class RootController {
 	public String pollStats(@PathVariable("skeletonId") int skeletonId, Model model) throws RepositoryError {
 
 		Poll poll = service.getPollInfos(skeletonId);
+//		System.out.println("Poll Submissions in RootController: "+poll.getPollSubmissions());
 		List<Question> questions = poll.getQuestions();
 		
 		// Per ogni question, ottengo la mappa delle sue options e del numero di persone che le hanno selezionate
@@ -69,8 +70,10 @@ public class RootController {
 		}
 //		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(questions);
 		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(poll);
+		List<GraphContainer> nonReqGraphContainerList = SVGGenerator.generateNonReqSVG(poll);
 		
 		model.addAttribute("graphContainerList",graphContainerList);
+		model.addAttribute("nonReqGraphContainerList",nonReqGraphContainerList);
 		
 		return "poll.stats";
 	}	

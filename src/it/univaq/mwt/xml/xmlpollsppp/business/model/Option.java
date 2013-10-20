@@ -26,7 +26,13 @@ public class Option {
 		this.content = content;
 		this.count = count;
 	}
-	
+
+	// Utilizzato per costruire le slice in SVGGenerator
+	public Option(String content, BigDecimal count) {
+		super();
+		this.content = content;
+		this.count = count;
+	}
 
 	public BigDecimal getAngleValue() {
 		return angleValue;

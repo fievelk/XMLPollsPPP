@@ -24,3 +24,24 @@
 	</div>
 </div>
 </c:forEach>
+<hr />
+<c:forEach items="${nonReqGraphContainerList}" var="nonReqGraphContainer">
+<div class="row">
+<h4>Statistiche sulle risposte opzionali relative al sondaggio n°${skeletonId}</h4>
+</div>
+<div class="row">
+	<div class="span3">
+		${nonReqGraphContainer.SVGcode}
+	</div>
+	<div class="span9" style="margin-top:15px;">
+		<c:forEach items="${nonReqGraphContainer.legendMap}" var="legend">
+		<c:set var="option" value="${legend.key}" />
+			<div style="display:block">
+				<div style="float:left; display:inline; width:50px;height:20px;border:1px solid #000;background-color:${legend.value};"></div>
+				<div style="right; display:inline;">&nbsp;<strong>${option.percentValue}&#37; </strong> [${option.count}] - ${option.content}</div>
+			</div>
+			<br>
+		</c:forEach>
+	</div>
+</div>
+</c:forEach>

@@ -299,7 +299,7 @@ public class XMLDBPollService implements PollService {
 			XMLResource submissionsCountRes = (XMLResource) submissionsCountResSet.getResource(0);
 			BigDecimal submissionsCount = new BigDecimal(submissionsCountRes.getContent().toString());
 			poll.setPollSubmissions(submissionsCount);
-//			System.out.println("SC "+submissionsCount);
+			System.out.println("PollSubmissions in XMLDBPollService "+submissionsCount);
 			
             ResourceSet questionsResSet = queryDB("/p:poll[p:pollHead/p:code='"+pollCode+"']//p:question", dbPollsSkeletons);
             
@@ -368,11 +368,13 @@ public class XMLDBPollService implements PollService {
 	
 	private BigDecimal getOptionalSubmissionCount(int pollCode) throws RepositoryError{
 		// Devo farmi restituire il numero di poll che abbiano ALMENO una risposta a una domanda opzionale.
-		ResourceSet nonReqSubmissionsCRSet = queryDB("count(/p:submittedPoll[//p:code='"+pollCode+"' and//p:answer[preceding-sibling::def:question[1][not(@required) or (@required='false')]]])", dbSubmittedPolls);
+//		ResourceSet submissionsCountResSet = queryDB("count(/p:submittedPoll[p:pollHead/p:code='"+pollCode+"'])", dbSubmittedPolls);
+		ResourceSet nonReqSubmissionsCRSet = queryDB("count(/p:submittedPoll[.//p:code='"+pollCode+"' and .//p:answer[preceding-sibling::p:question[1][not(@required) or (@required='false')]]])", dbSubmittedPolls);
 		BigDecimal submissionsWithOptAnswer = null;
 		try {
 			Resource nonReqSubmission = nonReqSubmissionsCRSet.getResource(0);
 			submissionsWithOptAnswer = new BigDecimal(nonReqSubmission.getContent().toString());
+			System.out.println("Submissions With OPT Answer: "+submissionsWithOptAnswer);
 		} catch (XMLDBException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
