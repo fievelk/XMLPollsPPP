@@ -2,8 +2,14 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/xml" prefix="x" %>
 <%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 
-<h2 class="text-info">Statistiche:</h2>
+<c:choose> 
+<c:when test="${empty graphContainerList && empty nonReqGraphContainerList}">
+<h2 class="text-info">Non ci sono statistiche per questo sondaggio.</h2>
+</c:when>
 
+<c:otherwise>
+
+<h2 class="text-info">Statistiche relative alle singole domande:</h2>
 <c:forEach items="${graphContainerList}" var="graphContainer">
 <div class="row">
 <h4>${graphContainer.question.code}: ${graphContainer.question.content}</h4>
@@ -25,9 +31,9 @@
 </div>
 </c:forEach>
 <hr />
+<h2 class="text-info">Statistiche relative alle risposte opzionali nel sondaggio n°${skeletonId}</h2>
 <c:forEach items="${nonReqGraphContainerList}" var="nonReqGraphContainer">
 <div class="row">
-<h4>Statistiche sulle risposte opzionali relative al sondaggio n°${skeletonId}</h4>
 </div>
 <div class="row">
 	<div class="span3">
@@ -45,3 +51,7 @@
 	</div>
 </div>
 </c:forEach>
+</c:otherwise>
+</c:choose>
+
+
