@@ -34,8 +34,6 @@
 <h2 class="text-info">Statistiche relative alle risposte opzionali nel sondaggio n°${skeletonId}</h2>
 <c:forEach items="${nonReqGraphContainerList}" var="nonReqGraphContainer">
 <div class="row">
-</div>
-<div class="row">
 	<div class="span3">
 		${nonReqGraphContainer.SVGcode}
 	</div>

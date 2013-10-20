@@ -20,12 +20,9 @@ import javax.xml.stream.events.XMLEvent;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
-
 public class SubmittedPollGenerator {
 	
 	private static ListMultimap<String, String> fromStringToMap(String inputString) {
-
-//		Map<String, String> map = new LinkedHashMap<String, String>();
 		ListMultimap<String, String> map = ArrayListMultimap.create();
 		String[] keyValues = inputString.split("&");
 		for (String keyValue : keyValues) {
@@ -35,11 +32,8 @@ public class SubmittedPollGenerator {
 		return map;
 	}
 	
-	
-	
 	/* Questo metodo prende l'xml dello skeleton e lo trasforma in un xml di submission con le risposte */
 	public static String generateSubmissionPoll(String pollSkeleton, String pollResults) {
-//		Map<String,String> questionAnswers = fromStringToMap(pollResults);
 		ListMultimap<String,String> questionAnswers = fromStringToMap(pollResults);
 		
         XMLInputFactory xif = XMLInputFactory.newInstance();
@@ -58,12 +52,8 @@ public class SubmittedPollGenerator {
             // converto la String in un InputStream
         	InputStream inputStream = new ByteArrayInputStream(pollSkeleton.getBytes("UTF-8"));
         	xer = xif.createXMLEventReader(inputStream);
-        	
         	XMLOutputFactory xof = XMLOutputFactory.newInstance();
-        	
-        	
 
-			//        	XMLEventWriter writer = xof.createXMLEventWriter(new OutputStreamWriter(System.out, "UTF-8")); // Perché con ISO-8859-1 non funziona?
         	XMLEventWriter writer = xof.createXMLEventWriter(new OutputStreamWriter(byteArrayOutputStream, "UTF-8")); // Perché con ISO-8859-1 non funziona?
         	XMLEventFactory eventFactory = XMLEventFactory.newInstance();
         	
@@ -84,9 +74,9 @@ public class SubmittedPollGenerator {
                 	StartElement optionStartElementEvent = event.asStartElement();
                 	
                 	/*
-                    In general there can  be some other attribute before code attribute.
-                    canConvertOptionToAnswer() returns true if "code" attribute value is contained in  "questionAnswers" map
-                    If there is a match do conversion of <option> to <answer> else skip <option> until </option>
+                    Potrebbero essere presenti altri attributi prima di 'code'.
+                    canConvertOptionToAnswer() returns true se il valore dell'attributo 'code' è contenuto nella map "questionAnswers"
+                    Se c'è il match converte <option> in <answers>, altrimenti skippa l'<option> fino a </option>
                      */
                 	if (canConvertOptionToAnswer(optionStartElementEvent, questionAnswers)) {
                 		convertOptionToAnswer(whitespaceBeforeOptionStartElement, optionStartElementEvent, xer, writer, eventFactory);
@@ -118,16 +108,15 @@ public class SubmittedPollGenerator {
             } catch (XMLStreamException ex) {
             }
         }
-        
         String result = byteArrayOutputStream.toString();
-        System.out.println(result);
+//        System.out.println(result);
 		return result;
 	}
 
 
 	private static void skipOption(XMLEventReader xer) throws XMLStreamException {
 		/* Finché non arriva a </option>, l'XMLEventReader skippa gli eventi, non inviandoli al writer.
-		 * Dà per scontato che l'evento precedente dell' XMLEventReader xer fosse START_ELEMENT <option> */
+		 * Dà per scontato che l'evento precedente dell'XMLEventReader xer fosse START_ELEMENT <option> */
 		XMLEvent eventWithinOptionElement;
 		do {
 	      eventWithinOptionElement = xer.nextEvent();
@@ -156,10 +145,9 @@ public class SubmittedPollGenerator {
 		}
 		
 		writer.add(eventFactory.createStartElement("", null, "answer"));
-		
 		/*
-	    copy attributes. Note that getAttributes() may not return attributes in the same order as they appear in xml document
-	    because according to XML spec order of attributes is not important.
+		Copia gli attributi. N.B.: getAttributes() potrebbe non restituire gli attributi nello stesso ordine in cui compaiono nel documento XML,
+		in quanto (secondo la specifica XML) l'ordine degli attributi non è importante.
 	     */
 	    Iterator ite = optionStartElementEvent.getAttributes();
 	    while(ite.hasNext())
@@ -180,34 +168,11 @@ public class SubmittedPollGenerator {
 	private static void convertPollToSubmittedPoll(StartElement pollStartElementEvent, XMLEventReader xer,	XMLEventWriter writer, XMLEventFactory eventFactory) throws XMLStreamException {
 		
 		writer.add(eventFactory.createStartElement("", null, "submittedPoll"));
-	
 		// Specifica i namespaces del documento xml submittedPoll 
 		writer.add(eventFactory.createAttribute("", "", "xmlns", "http://it.univaq.mwt.xml/submittedpoll"));
 		writer.add(eventFactory.createAttribute("xmlns", "http://it.univaq.mwt.xml/submittedpoll", "xsi", "http://www.w3.org/2001/XMLSchema-instance"));
 		writer.add(eventFactory.createAttribute("xsi", "http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://it.univaq.mwt.xml/submittedpoll submittedpoll.xsd"));
-		
 	    // E' in grado di sostituire automaticamente il tag di chiusura da /poll a /submittedPoll
 	}
 	
-	
-	
-/*	private static void convertPollToSubmittedPoll(StartElement pollStartElementEvent, XMLEventReader xer,	XMLEventWriter writer, XMLEventFactory eventFactory) throws XMLStreamException {
-		
-		writer.add(eventFactory.createStartElement("", null, "submittedPoll"));
-
-		Iterator ite = pollStartElementEvent.getAttributes();
-	    while(ite.hasNext())
-	    {
-	      Attribute attribute = (Attribute) ite.next();
-	      if (attribute.getName().getLocalPart().equals("schemaLocation")) {
-	    	  writer.add(eventFactory.createAttribute("", "", "xmlns", "http://it.univaq.mwt.xml/submittedpoll"));
-	    	  writer.add(eventFactory.createAttribute("xmlns", "http://it.univaq.mwt.xml/submittedpoll", "xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-	    	  writer.add(eventFactory.createAttribute("xsi", "http://www.w3.org/2001/XMLSchema-instance", "schemaLocation", "http://it.univaq.mwt.xml/submittedpoll submittedpoll.xsd"));
-	      } else {
-	    	  writer.add(attribute);
-	    	  }
-	    }
-	    
-	    // E' in grado di sostituire automaticamente il tag di chiusura da /poll a /submittedPoll
-	}*/
 }

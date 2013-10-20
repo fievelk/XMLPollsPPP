@@ -79,7 +79,5 @@ public class Option {
 	public void setPercentValue(BigDecimal percentValue) {
 		this.percentValue = percentValue;
 	}
-
-	
 	
 }

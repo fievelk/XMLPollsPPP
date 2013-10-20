@@ -48,33 +48,23 @@ public class RootController {
 
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
-//		System.out.println(pollResults);
 		service.createSubmittedPoll(submittedPoll);
 		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
-		
 		return "poll.result";
 	}	
 	
 	@RequestMapping(value="/polls/{skeletonId}/stats.do")
 	public String pollStats(@PathVariable("skeletonId") int skeletonId, Model model) throws RepositoryError {
-
 		Poll poll = service.getPollInfos(skeletonId);
-//		System.out.println("Poll Submissions in RootController: "+poll.getPollSubmissions());
 		List<Question> questions = poll.getQuestions();
-		
-		// Per ogni question, ottengo la mappa delle sue options e del numero di persone che le hanno selezionate
-		// Inserisco il risultato in una lista di queste mappe 
 		for (Question question : questions) {
 			List<Option> options = service.getPollAnswersStats(skeletonId, question.getCode());
 			question.setOptions(options);
 		}
-//		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(questions);
 		List<GraphContainer> graphContainerList = SVGGenerator.generateSVG(poll);
 		List<GraphContainer> nonReqGraphContainerList = SVGGenerator.generateNonReqSVG(poll);
-		
 		model.addAttribute("graphContainerList",graphContainerList);
 		model.addAttribute("nonReqGraphContainerList",nonReqGraphContainerList);
-		
 		return "poll.stats";
 	}	
 
