@@ -23,4 +23,6 @@ public interface PollService {
 	
 	Poll getPollInfos(int pollCode) throws RepositoryError;
 	
+	boolean storePoll(String submittedPoll) throws RepositoryError;
+	
 }

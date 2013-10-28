@@ -173,8 +173,8 @@ public class XMLDBPollService implements PollService {
 	                codeTitle.put(code, title);
 	            }
 	        }
-		} catch (XMLDBException e) {
-			e.printStackTrace();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa: " + ex.getMessage());
 		}
 		return codeTitle;
 	}	    
@@ -195,8 +195,8 @@ public class XMLDBPollService implements PollService {
             System.out.print("storing document " + res.getId() + "...");
             col.storeResource(res);
             System.out.println("ok.");
-        } catch (XMLDBException e) {
-			e.printStackTrace();
+        } catch (XMLDBException ex) {
+        	throw new RepositoryError("ERRORE di creazione della risorsa: " + ex.getMessage());
 		} finally {
             // Libera le risorse
             if(res != null) {
@@ -260,8 +260,8 @@ public class XMLDBPollService implements PollService {
 	            }
 	            
 	        }
-		} catch (XMLDBException e) {
-			e.printStackTrace();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa: " + ex.getMessage());
 		}
 		return optionsList;
 	}
@@ -329,8 +329,8 @@ public class XMLDBPollService implements PollService {
 	            BigDecimal submissionsWithOptAnswer = getOptionalSubmissionCount(pollCode);
 	            poll.setSubmissionsWithNonReqAnswer(submissionsWithOptAnswer);
 	        }
-		} catch (XMLDBException e) {
-			e.printStackTrace();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa: " + ex.getMessage());
 		}
 		return poll;
 	}
@@ -343,9 +343,8 @@ public class XMLDBPollService implements PollService {
 		try {
 			Resource nonReqSubmission = nonReqSubmissionsCRSet.getResource(0);
 			submissionsWithOptAnswer = new BigDecimal(nonReqSubmission.getContent().toString());
-		} catch (XMLDBException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa: " + ex.getMessage());
 		}
 			
 		return submissionsWithOptAnswer;
@@ -361,9 +360,45 @@ public class XMLDBPollService implements PollService {
 			//prelevo il singolo xslt e lo converto in Stringa
 			ResourceSet xsltResourceSet = queryDB("/xsl:stylesheet", dbXSLT);
 			xslt = xsltResourceSet.getResource(0).getContent().toString(); // Al momento c'è un solo XSLT, poi andrà modificato
-		} catch (XMLDBException e) {
-			e.printStackTrace();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa xslt: " + ex.getMessage());
 		}
 		return xslt;
+	}
+
+
+    // SOA Methods
+    
+	@Override
+	public boolean storePoll(String submittedPoll) throws RepositoryError {
+		boolean success = false;
+
+        Collection col = null;
+        XMLResource res = null;
+        try { 
+            col = dbSubmittedPolls;
+            // Crea una nuova XMLResource, a cui sarà assegnato un nuovo ID
+            String seqId = col.createId();
+            res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
+            
+            res.setContent(submittedPoll);
+            System.out.print("storing document " + res.getId() + "...");
+            col.storeResource(res);
+            success = true;
+        } catch (XMLDBException ex) {
+        	throw new RepositoryError("ERRORE di creazione della risorsa: " + ex.getMessage());
+		} finally {
+            // Libera le risorse
+            if(res != null) {
+                try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
+            }
+            
+            if(col != null) {
+                try { col.close(); } catch(XMLDBException xe) {xe.printStackTrace();}
+            }
+            
+        }
+		System.out.print(success);
+		return success;
 	}
 }
