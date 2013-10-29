@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<poll xmlns="http://it.univaq.mwt.xml/poll"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://it.univaq.mwt.xml/poll poll.xsd"
+>
+
+	<pollHead>
+		<code>4</code>
+		<title>Poll di test per checkbox</title>
+		<description>Descrizione test</description>
+		<author>Pierpaolo Pantone</author>
+		<date>2013-09-15T11:53:00</date>
+	</pollHead>
+	<pollBody>
+		<topic code="T1">
+			<topicHead>
+				<title>Check check check</title>
+				<description>Check your booty!</description>
+			</topicHead>
+			<topicBody>
+					<question code="T1Q1" type="multiple" required="true">Questa è una domanda fittizia?</question>
+					<option code="T1Q1_1">Sì.</option>
+					<option code="T1Q1_2">Sì2.</option>
+					<option code="T1Q1_3">Sì3.</option>
+
+					<question code="T1Q2" type="unique">I locali universitari sono puliti?</question>
+					<option code="T1Q2_1">Lorem Ipsum</option>
+					<option code="T1Q2_2">Lorem Ipsum</option>
+					<option code="T1Q2_3">Lorem Ipsum</option>
+
+			</topicBody>
+		</topic>
+	</pollBody>
+</poll>

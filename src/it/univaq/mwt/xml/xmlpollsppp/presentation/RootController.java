@@ -39,6 +39,7 @@ public class RootController {
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String xslt = service.getPollsXSLT();
 		String outputxml = XSLTTransform.transformFromString(pollSkeleton, xslt);
+		System.out.println(outputxml);
 		model.addAttribute("poll",outputxml);
 		return "poll.form";
 	}
@@ -48,8 +49,9 @@ public class RootController {
 
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
-		service.storePoll(submittedPoll);
-//		service.storePoll("http://localhost:8080/XMLPollsPPP/resources/submittedPollprova.xml"); // url di prova
+		service.createSubmittedPoll(submittedPoll);
+//		service.storePoll(submittedPoll);
+		service.storePoll("http://localhost:8080/XMLPollsPPP/resources/pollprova.xml"); // url di prova
 		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
 		return "poll.result";
 	}	

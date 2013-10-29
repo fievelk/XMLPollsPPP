@@ -24,5 +24,9 @@ public interface PollService {
 	boolean storePoll(String submittedPoll) throws RepositoryError;
 
 	String getSubmittedPollsXSD() throws RepositoryError;
+
+	String getPollsXSD() throws RepositoryError;
+
+	String createSubmittedPoll(String submittedPoll) throws RepositoryError;
 	
 }

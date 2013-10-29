@@ -1,10 +1,7 @@
 package it.univaq.mwt.xml.xmlpollsppp.business.impl;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -353,9 +350,41 @@ public class XMLDBPollService implements PollService {
 		return xslt;
 	}
 
+    
+    @Override
+    public String createSubmittedPoll(String submittedPoll) throws RepositoryError {
+
+          Collection col = null;
+          XMLResource res = null;
+          try {
+              col = dbSubmittedPolls;
+              // Crea una nuova XMLResource, a cui sarà assegnato un nuovo ID
+              String seqId = col.createId();
+              res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
+
+              res.setContent(submittedPoll);
+              System.out.print("storing document " + res.getId() + "...");
+              col.storeResource(res);
+              System.out.println("ok.");
+          } catch (XMLDBException ex) {
+            throw new RepositoryError("ERRORE di creazione della risorsa: " + ex.getMessage());
+      } finally {
+              // Libera le risorse
+              if(res != null) {
+                  try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
+              }
+
+              if(col != null) {
+                  try { col.close(); } catch(XMLDBException xe) {xe.printStackTrace();}
+              }
+          }
+
+      return null;
+    }
+    
 
 	@Override
-	public boolean storePoll(String submittedPollOrUrl) throws RepositoryError {
+	public boolean storePoll(String pollOrUrl) throws RepositoryError {
 //		Throwable t = null;
 		boolean success = false;
         Collection col = null;
@@ -364,7 +393,7 @@ public class XMLDBPollService implements PollService {
 		String body = null;
 		// Cerco di utilizzare la String submittedPoll come URL. Se è malformed, lo gestisco come contenuto xml nel catch dell'eccezione.
 		try {
-			submittedUrl = new URL(submittedPollOrUrl);
+			submittedUrl = new URL(pollOrUrl);
 			System.out.println("Url ben formato!");
 			URLConnection con = submittedUrl.openConnection();
 			InputStream in = con.getInputStream();
@@ -375,19 +404,19 @@ public class XMLDBPollService implements PollService {
 		} catch (MalformedURLException ex) {
 			System.out.println("L'url non era valido. Cerco di processarlo come xml...");
 			MyValidator validator = new MyValidator();
-			String xsdSchema = getSubmittedPollsXSD();
-			if (validator.validate(submittedPollOrUrl, xsdSchema)) {
-				body = submittedPollOrUrl;
+			String xsdSchema = getPollsXSD();
+			if (validator.validate(pollOrUrl, xsdSchema)) {
+				body = pollOrUrl;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			if (body != null) {
-				col = dbSubmittedPolls;
+				col = dbPollsSkeletons;
 	            try {
 					// Crea una nuova XMLResource, a cui sarà assegnato un nuovo ID
 		            String seqId = col.createId();
-		            res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
+		            res = (XMLResource)col.createResource("poll"+seqId, "XMLResource");
 		            
 		            res.setContent(body);
 		            System.out.print("Salvataggio del documento " + res.getId() + "...");
@@ -413,6 +442,23 @@ public class XMLDBPollService implements PollService {
 		return success;
 	}    
     
+	
+    @Override
+	public String getPollsXSD() throws RepositoryError {
+		String xsd = null;
+		Collection col = null;
+		XMLResource res = null;
+		try {
+			col = dbXSD;
+			res = (XMLResource)col.getResource("poll.xsd");
+			xsd = res.getContent().toString();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa xsd: " + ex.getMessage());
+		}
+		return xsd;
+	}  
+    
+	
     @Override
 	public String getSubmittedPollsXSD() throws RepositoryError {
 		String xsd = null;
@@ -423,7 +469,7 @@ public class XMLDBPollService implements PollService {
 			res = (XMLResource)col.getResource("submittedpoll.xsd");
 			xsd = res.getContent().toString();
 		} catch (XMLDBException ex) {
-			throw new RepositoryError("ERRORE di accesso alla risorsa xslt: " + ex.getMessage());
+			throw new RepositoryError("ERRORE di accesso alla risorsa xsd: " + ex.getMessage());
 		}
 		return xsd;
 	}   
