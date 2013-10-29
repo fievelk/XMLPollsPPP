@@ -19,6 +19,10 @@
 		      	<span class="badge">${codeTitle.key}</span> <a href="${pageContext.request.contextPath}/polls/${codeTitle.key}/stats.do">${codeTitle.value}</a><br/>
 		      	</c:forEach>
 		      </p>
+   	    	<h2 class="text-info">Path dei file per il submit:</h2>
+		      <p>
+		      	<span class="badge">1</span> <a href="${pageContext.request.contextPath}/resources/submittedPollprova.xml">submittedPollprova.xml</a><br/>
+		      </p>
 		 </div>
 	</div>
 	</div>

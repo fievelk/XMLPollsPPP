@@ -1,0 +1,64 @@
+<submittedPoll xmlns="http://it.univaq.mwt.xml/submittedpoll" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://it.univaq.mwt.xml/submittedpoll submittedpoll.xsd">
+    <pollHead>
+        <code>2</code>
+        <title>Strategie di realizzazione del progetto XMLPolls</title>
+        <description>Il sondaggio si prefigge lo scopo di raccogliere le scelte di implementazione per l'attuazione del progetto del corso di XML nell'ambito del Master in Web Technology.</description>
+        <author>Pierpaolo Pantone</author>
+        <date>2013-09-29T20:22:00</date>
+    </pollHead>
+    <pollBody>
+        <topic code="T1">
+            <topicHead>
+                <title>Sezione XML</title>
+                <description>Analisi delle scelte effettuate nella scrittura della struttura dei file xml</description>
+            </topicHead>
+            <topicBody>
+                <question code="T1Q1" required="true" type="unique">Quale encoding hai usato per il file xml del sondaggio?</question>
+                <answer code="T1Q1_1">ISO-8859-1</answer>
+                <question code="T1Q2" required="true" type="unique">In che modo hai implementato il codice identificativo relativo al sondaggio?</question>
+                <answer code="T1Q2_1">Inserendo un attributo all'interno dell'elemento poll</answer>
+                <question code="T1Q3" type="unique">Hai partizionato i quesiti del sondaggio in sotto-gruppi?</question>
+                <question code="T1Q4" type="unique">Come giudichi il tuo livello di comprensione della struttura xml?</question>
+            </topicBody>
+        </topic>
+        <topic code="T2">
+            <topicHead>
+                <title>Sezione XSD (Xml Schema)</title>
+                <description>Analisi delle scelte effettuate nella scrittura della struttura dei file xsd</description>
+            </topicHead>
+            <topicBody>
+                <question code="T2Q1" type="unique">Quale encoding hai usato per il file xsd del sondaggio?</question>
+                <question code="T2Q2" type="unique">In che modo hai gestito l'utilizzo di dichiarazioni globali e locali di elementi ed attributi?</question>
+                <question code="T2Q3" type="unique">Hai utilizzato dei pattern particolari creati su misura?</question>
+                <question code="T2Q4" type="unique">Hai utilizzato l'elemento group?</question>
+                <question code="T2Q4" type="unique">Come giudichi il tuo livello di comprensione degli xsd?</question>
+            </topicBody>
+        </topic>
+        <topic code="T3">
+            <topicHead>
+                <title>Sezione XSLT</title>
+                <description>Analisi delle scelte effettuate nella scrittura della trasformazione XSLT</description>
+            </topicHead>
+            <topicBody>
+                <question code="T3Q1" type="unique">DA FARE?</question>
+            </topicBody>
+        </topic>
+        <topic code="T4">
+            <topicHead>
+                <title>Sezione Java</title>
+                <description>Analisi delle scelte effettuate nell'implementazione dell'applicazione web Java</description>
+            </topicHead>
+            <topicBody>
+                <question code="T4Q1" type="unique">Hai utilizzato un framework? (Non considerare i templating framework)</question>
+                <question code="T4Q2" type="unique">Quale framework hai utilizzato?</question>
+                <question code="T4Q3" required="true" type="multiple">Quali strutture di persistenza hai utilizzato?</question>
+                <answer code="T4Q3_1">Una base di dati</answer>
+                <answer code="T4Q3_2">Il filesystem</answer>
+                <question code="T4Q4" type="unique">Quale genere di database hai utilizzato?</question>
+                <question code="T4Q5" type="unique">Quale database relazionale hai utilizzato?</question>
+                <question code="T4Q6" type="unique">Quale database xml hai utilizzato?</question>
+                <answer code="T4Q6_2">BaseX</answer>
+            </topicBody>
+        </topic>
+    </pollBody>
+</submittedPoll>

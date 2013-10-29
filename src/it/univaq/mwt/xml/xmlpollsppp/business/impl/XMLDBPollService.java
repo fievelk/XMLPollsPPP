@@ -1,6 +1,14 @@
 package it.univaq.mwt.xml.xmlpollsppp.business.impl;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +18,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.IOUtils;
 import org.exist.xmldb.EXistResource;
 import org.springframework.stereotype.Service;
 import org.xmldb.api.DatabaseManager;
@@ -23,6 +32,7 @@ import org.xmldb.api.modules.CollectionManagementService;
 import org.xmldb.api.modules.XMLResource;
 import org.xmldb.api.modules.XPathQueryService;
 
+import it.univaq.mwt.xml.xmlpollsppp.business.MyValidator;
 import it.univaq.mwt.xml.xmlpollsppp.business.PollService;
 import it.univaq.mwt.xml.xmlpollsppp.business.exceptions.RepositoryError;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Option;
@@ -37,6 +47,7 @@ public class XMLDBPollService implements PollService {
 	Map<String, String> namespaces;
 	Map<String, String> namespacesSubmittedPolls;
 	Map<String, String> namespacesXslt;
+	Map<String, String> namespacesXsd;
 	public static final String existDriver = "org.exist.xmldb.DatabaseImpl";
 	public static final String exist_uri = "xmldb:exist://localhost:8085/exist/xmlrpc/db";
 	
@@ -44,6 +55,7 @@ public class XMLDBPollService implements PollService {
 	private Collection dbPollsSkeletons;
 	private Collection dbSubmittedPolls;
 	private Collection dbXSLT;
+	private Collection dbXSD;
 	
 	public XMLDBPollService() throws RepositoryError {
 		
@@ -56,6 +68,9 @@ public class XMLDBPollService implements PollService {
 			
 			namespacesXslt = new HashMap();
 			namespacesXslt.put("xsl", "http://www.w3.org/1999/XSL/Transform");
+			
+			namespacesXsd = new HashMap();
+			namespacesXsd.put("xs", "http://www.w3.org/2001/XMLSchema");
 			
 			Class driver = Class.forName(existDriver);
 			Database database = (Database) driver.newInstance();
@@ -84,7 +99,8 @@ public class XMLDBPollService implements PollService {
             dbPollsSkeletons = cms.createCollection("pollsSkeletons");
             dbSubmittedPolls = cms.createCollection("submittedPolls");
             dbXSLT = cms.createCollection("xsltPolls");
-
+            dbXSD = cms.createCollection("xsdPolls");
+            
         } catch (XMLDBException ex) {
             throw new RepositoryError("ERRORE di creazione della base di dati: " + ex.getMessage());
         }
@@ -101,6 +117,10 @@ public class XMLDBPollService implements PollService {
                     xpqs.setNamespace(entry.getKey(), entry.getValue());
                 }
             } else if (coll.getName().equals(dbSubmittedPolls.getName())){
+            	for (Entry<String, String> entry : namespacesSubmittedPolls.entrySet()) {
+            		xpqs.setNamespace(entry.getKey(), entry.getValue());
+                }
+            } else if (coll.getName().equals(dbXSD.getName())){
             	for (Entry<String, String> entry : namespacesSubmittedPolls.entrySet()) {
             		xpqs.setNamespace(entry.getKey(), entry.getValue());
                 }
@@ -179,39 +199,6 @@ public class XMLDBPollService implements PollService {
 		return codeTitle;
 	}	    
     
-	
-	@Override
-	public String createSubmittedPoll(String submittedPoll) throws RepositoryError {
-
-        Collection col = null;
-        XMLResource res = null;
-        try { 
-            col = dbSubmittedPolls;
-            // Crea una nuova XMLResource, a cui sarà assegnato un nuovo ID
-            String seqId = col.createId();
-            res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
-            
-            res.setContent(submittedPoll);
-            System.out.print("storing document " + res.getId() + "...");
-            col.storeResource(res);
-            System.out.println("ok.");
-        } catch (XMLDBException ex) {
-        	throw new RepositoryError("ERRORE di creazione della risorsa: " + ex.getMessage());
-		} finally {
-            // Libera le risorse
-            if(res != null) {
-                try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
-            }
-            
-            if(col != null) {
-                try { col.close(); } catch(XMLDBException xe) {xe.printStackTrace();}
-            }
-        }
-		
-		
-		return null;
-	}
-	
 	
 	@Override
 	public List<Option> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError {
@@ -367,38 +354,77 @@ public class XMLDBPollService implements PollService {
 	}
 
 
-    // SOA Methods
-    
 	@Override
-	public boolean storePoll(String submittedPoll) throws RepositoryError {
+	public boolean storePoll(String submittedPollOrUrl) throws RepositoryError {
+//		Throwable t = null;
 		boolean success = false;
-
         Collection col = null;
         XMLResource res = null;
-        try { 
-            col = dbSubmittedPolls;
-            // Crea una nuova XMLResource, a cui sarà assegnato un nuovo ID
-            String seqId = col.createId();
-            res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
-            
-            res.setContent(submittedPoll);
-            System.out.print("storing document " + res.getId() + "...");
-            col.storeResource(res);
-            success = true;
-        } catch (XMLDBException ex) {
-        	throw new RepositoryError("ERRORE di creazione della risorsa: " + ex.getMessage());
+		URL submittedUrl = null;
+		String body = null;
+		// Cerco di utilizzare la String submittedPoll come URL. Se è malformed, lo gestisco come contenuto xml nel catch dell'eccezione.
+		try {
+			submittedUrl = new URL(submittedPollOrUrl);
+			System.out.println("Url ben formato!");
+			URLConnection con = submittedUrl.openConnection();
+			InputStream in = con.getInputStream();
+			String encoding = con.getContentEncoding();
+			encoding = encoding == null ? "UTF-8" : encoding;
+			body = IOUtils.toString(in, encoding);
+
+		} catch (MalformedURLException ex) {
+			System.out.println("L'url non era valido. Cerco di processarlo come xml...");
+			MyValidator validator = new MyValidator();
+			String xsdSchema = getSubmittedPollsXSD();
+			if (validator.validate(submittedPollOrUrl, xsdSchema)) {
+				body = submittedPollOrUrl;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
 		} finally {
-            // Libera le risorse
-            if(res != null) {
-                try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
-            }
-            
-            if(col != null) {
-                try { col.close(); } catch(XMLDBException xe) {xe.printStackTrace();}
-            }
+			if (body != null) {
+				col = dbSubmittedPolls;
+	            try {
+					// Crea una nuova XMLResource, a cui sarà assegnato un nuovo ID
+		            String seqId = col.createId();
+		            res = (XMLResource)col.createResource("submittedPoll"+seqId, "XMLResource");
+		            
+		            res.setContent(body);
+		            System.out.print("Salvataggio del documento " + res.getId() + "...");
+		            col.storeResource(res);
+		            success = true;
+	            } catch (XMLDBException ex) {
+				throw new RepositoryError("ERRORE di creazione della risorsa: " + ex.getMessage());
+	            }
+	            // Libera le risorse
+	            if(res != null) {
+	                try { ((EXistResource)res).freeResources(); } catch(XMLDBException xe) {xe.printStackTrace();}
+	            }
+	            
+	            if(col != null) {
+	                try { col.close(); } catch(XMLDBException xe) {xe.printStackTrace();}
+	            }
+			} else {
+				System.out.println("La stringa che hai fornito non era ne' un URL, ne' un XML valido.");
+			}
             
         }
-		System.out.print(success);
+		System.out.print("SALVATO");
 		return success;
-	}
+	}    
+    
+    @Override
+	public String getSubmittedPollsXSD() throws RepositoryError {
+		String xsd = null;
+		Collection col = null;
+		XMLResource res = null;
+		try {
+			col = dbXSD;
+			res = (XMLResource)col.getResource("submittedpoll.xsd");
+			xsd = res.getContent().toString();
+		} catch (XMLDBException ex) {
+			throw new RepositoryError("ERRORE di accesso alla risorsa xslt: " + ex.getMessage());
+		}
+		return xsd;
+	}   
 }

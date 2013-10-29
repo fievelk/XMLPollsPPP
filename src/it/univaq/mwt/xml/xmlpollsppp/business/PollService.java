@@ -17,12 +17,12 @@ public interface PollService {
 
 	String getPollsXSLT() throws RepositoryError;
 
-	String createSubmittedPoll(String submittedPoll) throws RepositoryError;
-	
 	List<Option> getPollAnswersStats(int pollCode, String questionCode) throws RepositoryError;
 	
 	Poll getPollInfos(int pollCode) throws RepositoryError;
 	
 	boolean storePoll(String submittedPoll) throws RepositoryError;
+
+	String getSubmittedPollsXSD() throws RepositoryError;
 	
 }

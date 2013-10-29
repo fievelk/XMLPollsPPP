@@ -48,8 +48,8 @@ public class RootController {
 
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
-//		service.createSubmittedPoll(submittedPoll);
 		service.storePoll(submittedPoll);
+//		service.storePoll("http://localhost:8080/XMLPollsPPP/resources/submittedPollprova.xml"); // url di prova
 		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
 		return "poll.result";
 	}	
