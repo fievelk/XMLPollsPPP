@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
@@ -22,7 +23,18 @@ import com.google.common.collect.ListMultimap;
 
 public class SubmittedPollGenerator {
 	
-	private static ListMultimap<String, String> fromStringToMap(String inputString) {
+	private static ListMultimap<String, String> fromMapToMultiMap(Map<String, String[]> map) {
+		ListMultimap<String, String> multiMap = ArrayListMultimap.create();
+		for (String key : map.keySet()){
+			String[] values = map.get(key);
+			for (String value : values) {
+				multiMap.put(key, value);
+			}
+		}
+		return multiMap;
+	}
+	
+/*	private static ListMultimap<String, String> fromStringToMap(String inputString) {
 		ListMultimap<String, String> map = ArrayListMultimap.create();
 		String[] keyValues = inputString.split("&");
 		for (String keyValue : keyValues) {
@@ -30,12 +42,13 @@ public class SubmittedPollGenerator {
 			map.put(pairs[0], pairs.length == 1 ? "" : pairs[1]);
 		}
 		return map;
-	}
+	}*/
 	
 	/* Questo metodo prende l'xml dello skeleton e lo trasforma in un xml di submission con le risposte */
-	public static String generateSubmissionPoll(String pollSkeleton, String pollResults) {
-		ListMultimap<String,String> questionAnswers = fromStringToMap(pollResults);
-		
+//	public static String generateSubmissionPoll(String pollSkeleton, String pollResults) {
+		public static String generateSubmissionPoll(String pollSkeleton, Map pollResults) {
+//		ListMultimap<String,String> questionAnswers = fromStringToMap(pollResults);
+		ListMultimap<String,String> questionAnswers = fromMapToMultiMap(pollResults);
         XMLInputFactory xif = XMLInputFactory.newInstance();
         
         /* Sono costretto a inserire manualmente la stringa con la dichiarazione dell'encoding

@@ -11,7 +11,10 @@ import it.univaq.mwt.xml.xmlpollsppp.business.model.Poll;
 import it.univaq.mwt.xml.xmlpollsppp.business.model.Question;
 
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -45,13 +48,15 @@ public class RootController {
 	}
 	
 	@RequestMapping(value="/polls/{skeletonId}/submitpoll.do", method=RequestMethod.POST)
-	public String submitPoll(@RequestBody String pollResults, @PathVariable("skeletonId") String skeletonId, Model model) throws RepositoryError {
+//	public String submitPoll(@RequestBody String pollResults, @PathVariable("skeletonId") String skeletonId, Model model, HttpServletRequest request) throws RepositoryError {
+	public String submitPoll(@PathVariable("skeletonId") String skeletonId, Model model, HttpServletRequest request) throws RepositoryError {
 
+		Map<String,String[]> pollResults = request.getParameterMap();
 		String pollSkeleton = service.getPollSkeletonByCode(skeletonId);
 		String submittedPoll = SubmittedPollGenerator.generateSubmissionPoll(pollSkeleton, pollResults); // Crea il submittedPoll a partire dal pollSkeleton
 		service.createSubmittedPoll(submittedPoll);
 //		service.storePoll(submittedPoll);
-		service.storePoll("http://localhost:8080/XMLPollsPPP/resources/pollprova.xml"); // url di prova
+		service.storePoll("http://localhost:8080/XMLPollsPPP/resources/pollprova.xml"); // url di prova per la submission di un nuovo skeleton
 		model.addAttribute("result","<xmp>"+submittedPoll+"</xmp>");
 		return "poll.result";
 	}	
